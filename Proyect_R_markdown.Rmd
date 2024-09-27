@@ -1,0 +1,277 @@
+---
+title: "Stroke dataset"
+author: "Florencia Luque  and Seyed Amirhossein Mosaddad "
+date: "October 6, 2024"
+output: html_document
+---
+
+```{r,echo=FALSE}
+library(ggplot2)
+library(readr)
+library(e1071)
+library(dplyr)
+library(formattable)
+library(pander)
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
+
+```
+
+## Introduction
+
+This dataset is blabla
+
+```{r setup, include=FALSE}
+path = "C:\\Users\\flore\\Desktop\\UC3M\\programacion en R\\proyect\\stroke data\\"
+data = read.csv("healthcare-dataset-stroke-data.csv",header = TRUE)
+str(data)
+data$gender = as.factor(data$gender)
+data$hypertension = as.factor(data$hypertension)
+data$heart_disease = as.factor(data$heart_disease)
+data$work_type = as.factor(data$work_type)
+data$Residence_type = as.factor(data$Residence_type)
+data$ever_married = as.factor(data$ever_married)
+data$smoking_status = as.factor(data$smoking_status)
+data$stroke = as.factor(data$stroke)
+data$bmi =as.numeric(data$bmi)
+```
+
+### Dataset
+
+The data contains stuff about stroke and the persons
+
+```{r}
+summary(data)
+```
+
+## Categorical Variables
+
+### Gender
+
+The next table shows a summary of the quantity of people getting a stroke by gender and the %
+
+```{r, warning=FALSE}
+stroke_gender = data %>% group_by(stroke,gender) %>% summarise(n = n(),.groups = "drop") %>% group_by(gender) %>% mutate(percent = n/sum(n)*100)
+
+pander(stroke_gender)
+
+
+
+```
+
+As you can see i dont know
+
+### Hypertension
+
+```{r, warning=FALSE}
+pander(data %>% group_by(stroke,hypertension) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(stroke) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+### Heart disease
+
+```{r, warning=FALSE}
+pander(data %>% group_by(stroke,heart_disease) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(heart_disease) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+### Ever Married
+
+```{r}
+pander(data %>% group_by(stroke,ever_married) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(ever_married) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+### Work Type
+
+```{r}
+pander(data %>% group_by(stroke,work_type) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(work_type) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+### Resident Type
+
+```{r}
+pander(data %>% group_by(stroke,Residence_type) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(Residence_type) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+This could mean something
+
+### Smoking Status
+
+```{r}
+pander(data %>% group_by(stroke,smoking_status) %>% summarise(n = n(),.groups = "drop")%>%
+  group_by(smoking_status) %>% mutate(percent = n/sum(n)*100))
+
+```
+
+It's very clear that this variable should be important in the model \## Numeric Variables
+
+### BMI
+
+The first variable to evaluate will be the *bmi*. This variable is a metric that represent the relation between height and weight of a person. As you can see we have `r (201/5110)*100` % percentage of NA. However this is less than 5% so to treat this variable we will deleted all the rows with the NA in *bmi*
+
+```{r}
+summary(data$bmi)
+```
+
+Next, we will check the frecquency of the data using the cut between (0-18.5] as underweight, (18.5-24.9] as normal, (24.9-29.9] as overweight, (29.9-34.9] as obese and over this as extremely obese. This value leaves over 50% of our population in normal and overweight and almost 40% in the largest side in obese and extremely obese.
+
+```{r}
+data = na.omit(data)
+frec_table <- cut(data$bmi, breaks = c(0, 18.5, 24.9, 29.9, 34.9, Inf), 
+                labels = c("Underweight", "Normal", "Overweight", "Obese", "Extremely Obese"))
+data$cat_weight = frec_table
+
+# Create frequency table
+bmi_freq_table <- table(frec_table)
+print(bmi_freq_table)
+bmi_rel_freq <- prop.table(bmi_freq_table)*100
+print(bmi_rel_freq)
+
+
+```
+
+If we check this with a graph we can see that the graph looks a bit symetrical with an inclination to the right. This could it mean that the distribution is not a normal like could it seem. We are going to check the kurtosis and skewness shape to check if there´s a problem.
+
+```{r, warning = FALSE}
+ggplot(data, aes(x=bmi)) + 
+  geom_histogram(color="black", fill="cadetblue1")+
+  labs(title = "BMI Distribution")
+
+
+
+bmi_mean <- mean(data$bmi)
+bmi_median <- median(data$bmi)
+
+# Density plot with a vertical line at the mean
+ggplot(data, aes(x = data$bmi)) +
+  geom_density(fill = "aquamarine1", alpha = 0.6) +
+  geom_vline(aes(xintercept = bmi_mean), color = "dodgerblue2", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = bmi_median), color = "hotpink1", linetype = "dotted", size = 1) +
+  labs(title = "Density Plot of BMI with Mean and Median", x = "BMI", y = "Density") +
+  annotate("text", x = bmi_mean + 0.5, y = 0.02, label = paste("Mean =", round(bmi_mean, 2)), color = "dodgerblue2") +
+  annotate("text", x = bmi_median - 0.5, y = 0.015, label = paste("Median =", round(bmi_median, 2)), color = "hotpink1") +
+  theme_minimal()
+```
+
+```{r}
+skewness(data$bmi)
+kurtosis(data$bmi)
+```
+
+The values of the shape tell us that this is not a normal distribution. There's a lot ot people in the center of the data but the quantity of people with a extremely high BMI that change the weigh of the tail in the distribution.
+
+Looking only at the graph we expected that the Kurtosis was close to 3 but a 3.35 shows that this data have a heavier tail than a normal distribution. This means that we have outliers in the data. In this case there's a lot of values over 30. If we combined the Skewness value of 1.05 and the Kurtosis this tell us that the the distribution in skewed to the right and that the heavier tails is to this side explaining the outliers.
+
+To see if the outliers are correctly in the heavier side we can check the boxplot of the *bmi*
+
+```{r}
+ggplot(data, aes(y = data$bmi)) + 
+  geom_boxplot(fill = "lightblue", color = "darkblue") + # Change box and border color
+  labs(title = "Boxplot of BMI", y = "BMI Values") + # Custom title and labels
+  theme_minimal()
+```
+
+As you can see with the boxplot we can make sure that the *bmi* data have outliers within the largest values. The problem with this data is that we can not be sure if this is a mistake in the part of measure or maybe exist people with those values.
+
+#### BMI with gender
+
+```{r}
+
+
+data_sub_bmi_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(bmi))
+print(data_sub_bmi_gender)
+
+ggplot(data, aes(x = data$bmi, fill = data$gender)) + 
+  geom_histogram(position = "identity", bins = 30)
+```
+
+#### BMI with hypertension
+
+```{r}
+
+
+data_sub_bmi_hyper= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(bmi))
+print(data_sub_bmi_hyper)
+ggplot(data, aes(x = bmi, fill = hypertension)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+#### BMI with stroke
+
+```{r, warning=FALSE}
+
+
+data_sub_bmi_catw= data %>% group_by(cat_weight,stroke) %>% summarise(mean = mean(bmi))
+print(data_sub_bmi_catw)
+
+ggplot(data, aes(x = bmi, fill = stroke)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+### Glucose levels
+
+#### Glucose levels with gender
+
+```{r, warning=FALSE}
+ggplot(data, aes(x = avg_glucose_level, fill = gender)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+#### Glucose levels with hypertension
+
+```{r, warning=FALSE}
+
+
+data_sub_glu_hyp= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(avg_glucose_level))
+print(data_sub_glu_hyp)
+ggplot(data, aes(x = avg_glucose_level, fill = hypertension)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+#### Glucose levels with stroke
+
+```{r, warning=FALSE}
+data_sub_glu= data %>% group_by(stroke) %>% summarise(mean = mean(avg_glucose_level))
+print(data_sub_glu)
+
+ggplot(data, aes(x = avg_glucose_level, fill = stroke)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+### Age
+
+#### Age levels with gender
+
+```{r, warning=FALSE}
+data_sub_age_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(age))
+print(data_sub_age_gender)
+ggplot(data, aes(x = age, fill = gender)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+#### Age levels with hypertension
+
+```{r, warning=FALSE}
+
+data_sub_age_hyp= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(age))
+print(data_sub_age_hyp)
+ggplot(data, aes(x = age, fill = hypertension)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
+
+jhjh \#### Age levels with stroke
+
+```{r, warning=FALSE}
+
+data_sub_age= data %>% group_by(stroke) %>% summarise(mean = mean(age))
+print(data_sub_age)
+ggplot(data, aes(x = age, fill = stroke)) + 
+  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+```
