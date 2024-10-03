@@ -18,7 +18,26 @@ knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
 
 ## Introduction
 
-This dataset is blabla
+This dataset is a data obtain from *kaggle* and is used to predict if a pacient will probably get a stroke based on characteristic of them like gender, age, bmi, glucose levels.\
+
+The stroke variable have a 4.8% of people have had one. We want to check the distributions of the variables and possibles explanations of which variable can make an impact to get a stroke before creating a model to proved or been proved wrong about it.\
+
+The data have the follow variables:\
+
+1) id: unique identifier
+2) gender: "Male", "Female" or "Other"
+3) age: age of the patient
+4) hypertension: 0 if the patient doesn't have hypertension, 1 if the patient has hypertension
+5) heart_disease: 0 if the patient doesn't have any heart diseases, 1 if the patient has a heart disease
+6) ever_married: "No" or "Yes"
+7) work_type: "children", "Govt_jov", "Never_worked", "Private" or "Self-employed"
+8) Residence_type: "Rural" or "Urban"
+9) avg_glucose_level: average glucose level in blood
+10) bmi: body mass index
+11) smoking_status: "formerly smoked", "never smoked", "smokes" or "Unknown"*
+12) stroke: 1 if the patient had a stroke or 0 if not
+
+The next is a summary of the data.
 
 ```{r setup, include=FALSE}
 path = "C:\\Users\\flore\\Desktop\\UC3M\\programacion en R\\proyect\\stroke data\\"
@@ -33,32 +52,43 @@ data$ever_married = as.factor(data$ever_married)
 data$smoking_status = as.factor(data$smoking_status)
 data$stroke = as.factor(data$stroke)
 data$bmi =as.numeric(data$bmi)
+stroke_counts <- table(data$stroke)
+percentage_of_1 <- (stroke_counts["1"] / sum(stroke_counts)) * 100
 ```
-
-### Dataset
-
-The data contains stuff about stroke and the persons
 
 ```{r}
 summary(data)
 ```
 
+
+### Dataset
+We will star the analysis with the categorical variables.
+
 ## Categorical Variables
 
 ### Gender
+This variable has 2 categories Male and Female (there's one person who is Other but it's only one so we can't make any assumptions about this data).
 
-The next table shows a summary of the quantity of people getting a stroke by gender and the %
+The next table shows a summary of the quantity of people getting a stroke by gender and the corresponding percentage.
 
 ```{r, warning=FALSE}
 stroke_gender = data %>% group_by(stroke,gender) %>% summarise(n = n(),.groups = "drop") %>% group_by(gender) %>% mutate(percent = n/sum(n)*100)
 
 pander(stroke_gender)
-
-
-
 ```
 
-As you can see i dont know
+```{r}
+ggplot(stroke_gender, aes(x = "", y = percent, fill = factor(stroke))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  facet_wrap(~ gender) +  # Separate charts for each gender
+  labs(title = "Stroke Distribution by Gender", fill = "Stroke", y = "Percentage") +
+  scale_fill_manual(values = c("0" = "#249", "1" = "deeppink1")) +  # Custom colors for 0 and 1
+   theme_void()
+```
+
+As you can see there's a higher % of male that have had a stroke in the data. This number is a little bit higher than the population so we don't think this would have a great impact in the future model.
+
 
 ### Hypertension
 
