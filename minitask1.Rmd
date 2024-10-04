@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
 The apply Family is a way to apply a function to different types of data like a row, vector, matrix, etc. This functions have been replace or you should replace it with others libraries that do the same with an optimal result. This function is an alternative to a loop when you know waht you need to do to the data.
 #explain why or something about the general ways of the apply family
 
-The family is created by this functions; apply(), lapply() , sapply(), vapply(), mapply(), rapply(), and tapply() functions.
+The family is created by this functions; apply(), lapply() , sapply(), vapply(), mapply() and tapply() functions.
 
 ### apply
 This function can be use to an arrays in different dimensions like a matrix. You will need a X the array, Margin 1 o 2 if you want to apply the function by row (1) and over columns (2). You can also apply on both using Margin=c(1,2) and obviously the fun that will be the function that you would like to apply like the sum or the mean.
@@ -66,19 +66,24 @@ sapply(vec, FUN = function(x) 0.5*x)
 ```
 This function give you the same type that you give it in the input.
 
-### vapply
-
-### rapply
-
 ### mapply
+This is the multivariate version of sapply. Applying a function to multiple arguments.
+```{r}
+mapply(sum, 1:5, 6:10)
+```
 
+### vapply
+This is a more strict version of sapply in where you need to specified the type of return that you would like.
+```{r}
+my_list <- list(a = 1:5, b = 6:10)
+vapply(my_list, sum,numeric(1))
+```
 ## Part 2 - MLE
 
 ### MLE for gamma distribution
 
 ```{r}
 mle_gamma = function(n){
-  
   
   
 }
