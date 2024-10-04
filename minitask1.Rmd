@@ -74,4 +74,13 @@ This function give you the same type that you give it in the input.
 
 ## Part 2 - MLE
 
+### MLE for gamma distribution
+
+```{r}
+mle_gamma = function(n){
+  
+  
+  
+}
+```
 
