@@ -5,7 +5,7 @@ date: "October 6, 2024"
 output: pdf_document
 ---
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,warning=TRUE}
 library(ggplot2)
 library(readr)
 library(e1071)
@@ -77,7 +77,7 @@ stroke_gender = data %>% group_by(stroke,gender) %>% summarise(n = n(),.groups =
 pander(stroke_gender)
 ```
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=gender) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=gender) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
 As you can see there's a higher % of male that have had a stroke in the data. This number is a little bit higher than the population so we don't think this would have a great impact in the future model.
@@ -87,14 +87,15 @@ As you can see there's a higher % of male that have had a stroke in the data. Th
 
 ```{r, warning=FALSE}
 pander(data %>% group_by(stroke,hypertension) %>% summarise(n = n(),.groups = "drop")%>%
-  group_by(stroke) %>% mutate(percent = n/sum(n)*100))
+  group_by(hypertension) %>% mutate(percent = n/sum(n)*100))
 
 ```
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=hypertension) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=hypertension) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+The % of people who have had a stroke and have hypertension are significantly highier than the population. There's a difference approx. 9%. This could mean that if you have hypertension you could be more likely to get a stroke. 
 ### Heart disease
 
 ```{r, warning=FALSE}
@@ -104,9 +105,11 @@ pander(data %>% group_by(stroke,heart_disease) %>% summarise(n = n(),.groups = "
 ```
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=heart_disease) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=heart_disease) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+The data of the people who have a heart diseased look even more likely to get a stroke than the ones who have hypertension. Maybe there's a relation between hypertension and having a heart diseased. Heart diseased is a variable to check for more details.
+
 ### Ever Married
 
 ```{r}
@@ -116,21 +119,23 @@ pander(data %>% group_by(stroke,ever_married) %>% summarise(n = n(),.groups = "d
 ```
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=ever_married) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=ever_married) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+there's more people that have had a stroke you have been married than not been married. The difference with the population is big but with the ones that never married maybe not get married lower your changes or getting a stroke.
 ### Work Type
 
 ```{r}
 pander(data %>% group_by(stroke,work_type) %>% summarise(n = n(),.groups = "drop")%>%
   group_by(work_type) %>% mutate(percent = n/sum(n)*100))
-
 ```
+
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=work_type) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=work_type) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+Clairly the self employed have the highest % of people who have han a stroke. This could be because of stress and the people who work with children have the lowest. Hope that working with children reduces your chances.
 ### Resident Type
 
 ```{r}
@@ -140,9 +145,10 @@ pander(data %>% group_by(stroke,Residence_type) %>% summarise(n = n(),.groups = 
 ```
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=Residence_type) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=Residence_type) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+The part of the city that you live looks like it doesn't matter because the % of stroke is very similar to the population and almost the same between the types of resident.
 This could mean something
 
 ### Smoking Status
@@ -154,9 +160,10 @@ pander(data %>% group_by(stroke,smoking_status) %>% summarise(n = n(),.groups = 
 ```
 
 ```{r} 
-ggplot(data)+aes(x=stroke,fill=smoking_status) + geom_bar(position=position_dodge())
+ggplot(data)+aes(x=stroke,fill=smoking_status) + geom_bar(position=position_dodge())+theme_minimal()
 
 ```
+This results call the attention because the people you formerly smoked have 3% higher than the population but obe who smokes or never have similar numbers. This could be a multivariate problem because this type of data probably mix more than one variable at a time.
 It's very clear that this variable should be important in the model \## Numeric Variables
 
 ### BMI
