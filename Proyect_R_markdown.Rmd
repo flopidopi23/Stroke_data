@@ -2,7 +2,7 @@
 title: "Stroke dataset"
 author: "Florencia Luque  and Seyed Amirhossein Mosaddad "
 date: "October 6, 2024"
-output: html_document
+output: pdf_document
 ---
 
 ```{r,echo=FALSE}
@@ -76,17 +76,10 @@ stroke_gender = data %>% group_by(stroke,gender) %>% summarise(n = n(),.groups =
 
 pander(stroke_gender)
 ```
+```{r} 
+ggplot(data)+aes(x=stroke,fill=gender) + geom_bar(position=position_dodge())
 
-```{r}
-ggplot(stroke_gender, aes(x = "", y = percent, fill = factor(stroke))) +
-  geom_bar(stat = "identity", width = 1) +
-  coord_polar(theta = "y") +
-  facet_wrap(~ gender) +  # Separate charts for each gender
-  labs(title = "Stroke Distribution by Gender", fill = "Stroke", y = "Percentage") +
-  scale_fill_manual(values = c("0" = "#249", "1" = "deeppink1")) +  # Custom colors for 0 and 1
-   theme_void()
 ```
-
 As you can see there's a higher % of male that have had a stroke in the data. This number is a little bit higher than the population so we don't think this would have a great impact in the future model.
 
 
@@ -98,6 +91,10 @@ pander(data %>% group_by(stroke,hypertension) %>% summarise(n = n(),.groups = "d
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=hypertension) + geom_bar(position=position_dodge())
+
+```
 ### Heart disease
 
 ```{r, warning=FALSE}
@@ -106,6 +103,10 @@ pander(data %>% group_by(stroke,heart_disease) %>% summarise(n = n(),.groups = "
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=heart_disease) + geom_bar(position=position_dodge())
+
+```
 ### Ever Married
 
 ```{r}
@@ -114,6 +115,10 @@ pander(data %>% group_by(stroke,ever_married) %>% summarise(n = n(),.groups = "d
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=ever_married) + geom_bar(position=position_dodge())
+
+```
 ### Work Type
 
 ```{r}
@@ -122,6 +127,10 @@ pander(data %>% group_by(stroke,work_type) %>% summarise(n = n(),.groups = "drop
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=work_type) + geom_bar(position=position_dodge())
+
+```
 ### Resident Type
 
 ```{r}
@@ -130,6 +139,10 @@ pander(data %>% group_by(stroke,Residence_type) %>% summarise(n = n(),.groups = 
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=Residence_type) + geom_bar(position=position_dodge())
+
+```
 This could mean something
 
 ### Smoking Status
@@ -140,6 +153,10 @@ pander(data %>% group_by(stroke,smoking_status) %>% summarise(n = n(),.groups = 
 
 ```
 
+```{r} 
+ggplot(data)+aes(x=stroke,fill=smoking_status) + geom_bar(position=position_dodge())
+
+```
 It's very clear that this variable should be important in the model \## Numeric Variables
 
 ### BMI
@@ -219,7 +236,8 @@ data_sub_bmi_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(
 print(data_sub_bmi_gender)
 
 ggplot(data, aes(x = data$bmi, fill = data$gender)) + 
-  geom_histogram(position = "identity", bins = 30)
+  geom_bar(position = position_dodge())
+  #geom_histogram(position = "identity", bins = 30)
 ```
 
 #### BMI with hypertension
