@@ -10,7 +10,67 @@ knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
 ```
 
 ## Part 1 - Apply Family 
+The apply Family is a way to apply a function to different types of data like a row, vector, matrix, etc. This functions have been replace or you should replace it with others libraries that do the same with an optimal result. This function is an alternative to a loop when you know waht you need to do to the data.
+#explain why or something about the general ways of the apply family
 
+The family is created by this functions; apply(), lapply() , sapply(), vapply(), mapply(), rapply(), and tapply() functions.
+
+### apply
+This function can be use to an arrays in different dimensions like a matrix. You will need a X the array, Margin 1 o 2 if you want to apply the function by row (1) and over columns (2). You can also apply on both using Margin=c(1,2) and obviously the fun that will be the function that you would like to apply like the sum or the mean.
+Example:
+```{r}
+mat = matrix(data = rnorm(20,20,4),nrow = 4,ncol = 5,byrow = TRUE)
+print(mat)
+
+sum_by_column = apply(mat,MARGIN = 2,FUN = sum)
+
+print(sum_by_column)
+```
+### tapply 
+Is very similar to apply but you can apply the function by groups. You can use this function to a dataframe or a matrix and you will need the data, the index that will be the factor that you want to group by and the fun. You can have more arguments but is not essential to make it work. 
+We can transform or data to aggregate a factor variable and create and example.
+```{r}
+data = data.frame(mat)
+data$grupo = c("A","B","B","A")
+colnames(data)[1] = "age"
+colnames(data)[2] = "bmi"
+data$grupo = as.factor(data$grupo)
+
+tapply(data$age,data$grupo,mean)
+```
+### lapply
+This function is apply over a list or a vector and return a list of the same lenght of the original input. This is a way to apply a function to every element on a list. The function will need the list or vector and the function that you want to apply. This mean that if you give it a vector it will apply the function to each element and if you give it a list it will apply by elements of the list.
+
+```{r}
+lista = list(tr = c(1:6),mn = c(5:8))
+lista
+lapply(lista, median)
+
+vec = sample(1:40,5)
+vec
+lapply(vec, FUN = function(x) 0.5*x)
+```
+
+### sapply
+This function can by apply by a vector or list and will return a vector or a list. This function is very similar to lapply but it try to simplify it. This function is a wrapper of the lapply it can return not only a list it can return a vector, matrix or an array instead of a list.
+Let's do the same exercise to see the difference between both functions.
+
+```{r}
+lista = list(tr = c(1:6),mn = c(5:8))
+lista
+sapply(lista, median)
+
+vec = sample(1:40,5)
+vec
+sapply(vec, FUN = function(x) 0.5*x)
+```
+This function give you the same type that you give it in the input.
+
+### vapply
+
+### rapply
+
+### mapply
 
 ## Part 2 - MLE
 
