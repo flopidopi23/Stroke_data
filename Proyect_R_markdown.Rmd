@@ -12,6 +12,7 @@ library(e1071)
 library(dplyr)
 library(formattable)
 library(pander)
+library(agricolae)
 knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
 
 ```
@@ -192,11 +193,23 @@ print(bmi_rel_freq)
 ```
 
 If we check this with a graph we can see that the graph looks a bit symetrical with an inclination to the right. This could it mean that the distribution is not a normal like could it seem. We are going to check the kurtosis and skewness shape to check if there´s a problem.
+```{r,include=FALSE}
+aux_bmi = hist(data$bmi)
+```
+
+
+```{r}
+stat.freq(aux_bmi)
+```
+
 
 ```{r, warning = FALSE}
+
+
 ggplot(data, aes(x=bmi)) + 
   geom_histogram(color="black", fill="cadetblue1")+
   labs(title = "BMI Distribution")
+
 
 
 
@@ -232,19 +245,30 @@ ggplot(data, aes(y = data$bmi)) +
   theme_minimal()
 ```
 
-As you can see with the boxplot we can make sure that the *bmi* data have outliers within the largest values. The problem with this data is that we can not be sure if this is a mistake in the part of measure or maybe exist people with those values.
+As you can see with the boxplot we can make sure that the *bmi* data have outliers within the largest values. The problem with this data is that we can not be sure if this is a mistake in the part of measure or maybe exist people with those values. YOu can see this in the qqplot next.
+
+```{r}
+ggplot(data, aes(sample=bmi)) + stat_qq(size=2,color=rainbow(4909))+stat_qq_line()+theme_minimal()+
+  labs(title = "QQ plot for bmi")
+
+```
 
 #### BMI with gender
 
 ```{r}
 
 
-data_sub_bmi_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(bmi))
+data_sub_bmi_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
 print(data_sub_bmi_gender)
 
 ggplot(data, aes(x = data$bmi, fill = data$gender)) + 
-  geom_bar(position = position_dodge())
-  #geom_histogram(position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi histogram by gender",x="bmi",y="count")
+
+ggplot(data, aes(sample = data$bmi, fill = data$gender))+
+  stat_qq(size=2)+ stat_qq_line() +
+  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi qqplot by gender",x="gender",y="count")
+
 ```
 
 #### BMI with hypertension
@@ -254,8 +278,10 @@ ggplot(data, aes(x = data$bmi, fill = data$gender)) +
 
 data_sub_bmi_hyper= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(bmi))
 print(data_sub_bmi_hyper)
+
 ggplot(data, aes(x = bmi, fill = hypertension)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~hypertension)+theme_minimal()+labs(title = "bmi histogram by hypertesion",x="bmi",y="count")
 ```
 
 #### BMI with stroke
@@ -266,8 +292,9 @@ ggplot(data, aes(x = bmi, fill = hypertension)) +
 data_sub_bmi_catw= data %>% group_by(cat_weight,stroke) %>% summarise(mean = mean(bmi))
 print(data_sub_bmi_catw)
 
-ggplot(data, aes(x = bmi, fill = stroke)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+ggplot(data, aes(x = data$bmi, fill = stroke)) + 
+  geom_histogram(binwidth = 3)+
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "bmi histogram by stroke",x="bmi",y="count")
 ```
 
 ### Glucose levels
@@ -276,7 +303,8 @@ ggplot(data, aes(x = bmi, fill = stroke)) +
 
 ```{r, warning=FALSE}
 ggplot(data, aes(x = avg_glucose_level, fill = gender)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~gender)+theme_minimal()+labs(title = "avg glucose histogram by gender",x="avg glucose",y="count")
 ```
 
 #### Glucose levels with hypertension
@@ -287,7 +315,8 @@ ggplot(data, aes(x = avg_glucose_level, fill = gender)) +
 data_sub_glu_hyp= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(avg_glucose_level))
 print(data_sub_glu_hyp)
 ggplot(data, aes(x = avg_glucose_level, fill = hypertension)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~hypertension)+theme_minimal()+labs(title = "avg glucose histogram by hypertension",x="avg glucose",y="count")
 ```
 
 #### Glucose levels with stroke
@@ -297,10 +326,35 @@ data_sub_glu= data %>% group_by(stroke) %>% summarise(mean = mean(avg_glucose_le
 print(data_sub_glu)
 
 ggplot(data, aes(x = avg_glucose_level, fill = stroke)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "avg glucose histogram by stroke",x="avg glucose",y="count")
 ```
 
 ### Age
+
+```{r, warning = FALSE}
+
+
+ggplot(data, aes(x=age)) + 
+  geom_histogram(color="black", fill="cadetblue1")+
+  labs(title = "Age Distribution")
+
+
+
+
+age_mean <- mean(data$age)
+age_median <- median(data$age)
+
+# Density plot with a vertical line at the mean
+ggplot(data, aes(x = data$age)) +
+  geom_density(fill = "aquamarine1", alpha = 0.6) +
+  geom_vline(aes(xintercept = age_mean), color = "dodgerblue2", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = age_median), color = "hotpink1", linetype = "dotted", size = 1) +
+  labs(title = "Density Plot of BMI with Mean and Median", x = "BMI", y = "Density") +
+  annotate("text", x = age_mean + 0.5, y = 0.02, label = paste("Mean =", round(age_mean, 0)), color = "dodgerblue2") +
+  annotate("text", x = age_median - 0.5, y = 0.015, label = paste("Median =", round(age_median, 0)), color = "hotpink1") +
+  theme_minimal()
+```
 
 #### Age levels with gender
 
@@ -308,7 +362,8 @@ ggplot(data, aes(x = avg_glucose_level, fill = stroke)) +
 data_sub_age_gender= data %>% group_by(gender,stroke) %>% summarise(mean = mean(age))
 print(data_sub_age_gender)
 ggplot(data, aes(x = age, fill = gender)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~gender)+theme_minimal()+labs(title = "age histogram by gender",x="age",y="count")
 ```
 
 #### Age levels with hypertension
@@ -318,15 +373,17 @@ ggplot(data, aes(x = age, fill = gender)) +
 data_sub_age_hyp= data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(age))
 print(data_sub_age_hyp)
 ggplot(data, aes(x = age, fill = hypertension)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~hypertension)+theme_minimal()+labs(title = "age histogram by hypertension",x="age",y="count")
 ```
 
-jhjh \#### Age levels with stroke
+#### Age levels with stroke
 
 ```{r, warning=FALSE}
 
 data_sub_age= data %>% group_by(stroke) %>% summarise(mean = mean(age))
 print(data_sub_age)
 ggplot(data, aes(x = age, fill = stroke)) + 
-  geom_histogram(alpha = 0.6, position = "identity", bins = 30)
+  geom_histogram(binwidth = 5.5)+
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "age histogram by stroke",x="age",y="count")
 ```
