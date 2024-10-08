@@ -187,13 +187,13 @@ As we can see, we are not able to solve for $k$ analytically as it does not have
 
 ```{r}
 
-# As we need to use the Digamma function, we need to install the required library
+# we need to install the required library
 if (!requireNamespace("stats", quietly = TRUE)) {
   install.packages("stats")
 }
 ```
 
-Most optimisation algorithms are designed and implemented in a way to compute the minimisation the function rather than maximise it. But here we would like to estimate the maximum likelihood by maximising the log-likelihood function. So we need to convert our function into the negative log-likelihood.
+Most optimisation algorithms are designed and implemented in a way to compute the minimisation of the function rather than maximise it. But here we would like to estimate the maximum likelihood by maximising the log-likelihood function. So we need to convert our function into the negative log-likelihood.
 
 ```{r}
 gamma_negativeLL = function(params, data) {
@@ -236,6 +236,7 @@ Thus, the shape parameter $k$ can be estimated as:
 $$k = \frac{\bar{X}^2}{S^2}$$
 
 ```{r}
+library(stats4)
 mleGamma = function(data) {
   xBar = mean(data)
   xVar = var(data)
@@ -243,20 +244,19 @@ mleGamma = function(data) {
   initTheta = xVar/xBar
   
   # since we want to maximise a multivariate function (function with more than one parameter),
-  # we use the function optim, which is used for multidimensional optimisation
-  mleResult = optim(
-    par = c(initK, initTheta), # Initial guesses for k and theta
-    fn = gamma_negativeLL, # Objective function
-    data = data,
+  # we use the function mle, which is used for multidimensional optimisation
+  mleResult = mle(
+    minuslogl = function(k, theta) gamma_negativeLL(c(k, theta), data),
+    start = list(k = initK, theta = initTheta), #starting values
     method = "L-BFGS-B", # optimisation method
     lower =  c(1e-6, 1e-6), # lower bounds to avoid invalid params
     upper = c(Inf, Inf) # upper bound
   )
-  return (list(shape = mleResult$par[1], scale = mleResult$par[2]))
+  return (coef(mleResult))
 }
 ```
 
-#### side note
+### side note:
 
 We specifically use the "L-BFGS-B" methods for optimisation as this method is useful for solving problems involving bound constraints on the parameters. The gamma distribution parameters $\theta$ and $k$ must be strictly positive. Hence by using this methd we can set a lower bound to ensure they remain withtin a valid range.
 
@@ -271,6 +271,203 @@ Now we run our MLE estimator to see how close they are to our true parameters.
 
 ```{r}
 results = mleGamma(sampleData)
-cat("Estimated shape (k):", results$shape, "\n")
-cat("Estimated scale (theta):", results$scale, "\n")
+cat("Estimated shape (k):", results[1], "\n")
+cat("Estimated scale (theta):", results[2], "\n")
 ```
+
+## MaxLik in R
+
+MaxLik is an R package designed and implemented to calculate Maximum Likelihood Estimation (MLE) for various statistical models. It offers useful tools and built-in functions to facilitate parameter estimation and analysis for different distributions.
+
+This framework provides functionalities to easily compute the estimation of complex models without havin to manually derive estimation equations. It also offers features to check and interpet the results.
+
+A summary of more important properties and features is listed below:
+
+1.  This frameowrk has a lot of different optimisation methods that allow users to easily handle their statistical models. In addition, users can define their own custom log-likelihood functions and analyse more complex models if it is not pre-defined in the framework.
+
+2.  There are many optimisation algorithms availabe to choose from. some of which are:
+
+    -   Newton-Raphson: A second order method to find the optimum.
+    -   Berndt-Hall-Hall-Hausman (BHHH): A variant of Newton-Raphson that utilises the outer product of the gradient.
+    -   BFGS (Broyden-Fletcher-Goldfarb-Shanno): A quasi-Newton method that approximates the Hessian matrix.
+    -   Simplex and Nelder-Mead: Non-gradient methods for optimizing non-differentiable functions.
+    -   Simulated Annealing: A probabilistic method for global optimization.
+
+3.  In addition, we are able to calculate standard errors using different methods:
+
+    -   Hessian Matrix: we can compute standard errors by calculating the Hessian Matrix, which is usually derived from the second derivative of the likelihood function.
+    -   Outer Product of Gradients (OPG): By utilising the outer product of the gradient vector.
+    -   Sandwich Estimator: It accounts for model misspecification.
+
+4.  With MaxLik, we can impose linear or non-linear constraints on the parameters space and optimise our model that satisifes the parameter conditions.
+
+5.  Moreover, we can check the quality of our estimated model with MaxLik by using a range of post-estimation tools:
+
+    -   Likelihood Ratio Tests: To compare models and evaluate if additional parameters improve the model fit.
+    -   Confidence Intervals: Computed for estimated parameters to provide estimation uncertainty.
+    -   Gradient and Hessian Checking: To check the accuracy of the numerical optimization and see if we have issues like non-convergence or improper model specification.
+
+6.  MaxLik offers a very user-friendly and intuitive interface. It simplifies MLE even for users without expertise in optimisation. The model need to be specifiied in normal R syntax and MaxLik can do the rest.
+
+7.  There are some advanced features availabe as well for more complex models and optimisations:
+
+    -   Multi-parameter Estimation: Supports estimation of multiple parameters simultaneously, such as the Gamma distribution.
+    -   Support for Non-standard Likelihoods: handling likelihood functions that do not follow the standard forms. It allows users to implement customised models.
+    -   Parallel Computing: to speed up optimisation. More effective for large-scale problems and models with high computational need
+
+8.  MaxLik also integrates with other R packages, making it easier to be utilised for larger workflows. For example, it can be integrated with data visualisation packages and other statistical frameworks.
+
+### Applications
+
+MaxLik can be applied in any fiels that requires statistical modeling and optimisation. some of which are:
+
+1.  Econometrics: For estimating economic models like logistic regression, probit models, and time series analysis.
+
+2.  Biostatistics: In survival analysis and other medical research models where likelihood-based estimation is essential.
+
+3.  Machine Learning: For optimizing loss functions in supervised learning models.
+
+### Limitations
+
+MaxLik also has its limitations. For example:
+
+1.  Numerical Sensitivity: The results of MLE can be sensitive to the choice of starting values and the optimization method. Poor choices can cause convergence issues or incorrect estimates.
+
+2.  Computational intensity: For large datasets or complex models, MaxLik can be computationally intensive and slow, particularly when using numerical approximations for gradients and Hessians.
+
+### Typical Workflow
+
+Here is an example of a typical workflow in MaxLik:
+
+1.  We first define the log-likelihood functions with data and a set of parameters being the inputs. Here we have a simple log-likelihood function for linear regression model:
+
+```{r, eval=FALSE}
+log_likelihood = function(params, data) {
+    # Extract parameters
+    param1 = params[1]
+    param2 = params[2]
+    # ...
+
+    # Calculate log-likelihood based on your model
+    ll = sum(log_probability_density_function(...))
+
+    return(ll)
+}
+```
+
+2.  The main function in the MaxLik library is maxLik(), which performs maximum likelihood estimation.
+
+```{r, eval=FALSE}
+result = maxLik(logLik = log_likelihood,
+                 grad = gradient,  # Optional
+                 hess = hessian,   # Optional
+                 start = start_values,
+                 method = "BFGS",  # or another method
+                 data = data,
+                 nproc = 4)        # For parallel processing
+```
+
+3.  Then we extract the results for desired estimated parameters.
+
+```{r, eval=FALSE}
+# View summary of results
+summary(result)
+
+# Extract coefficients
+coefficients <- coef(result)
+
+# Get standard errors
+std_errors <- sqrt(diag(vcov(result)))
+
+# Calculate confidence intervals
+conf_intervals <- confint(result)
+```
+
+4.  Finally, we can perform post-estimation analysis such as hypothesis tests, model fit, and confidence intervals.
+
+```{r, eval=FALSE}
+# Create tables of results
+results_table = data.frame(
+    Estimate = coefficients,
+    Std.Error = std_errors,
+    CI_lower = conf_intervals[,1],
+    CI_upper = conf_intervals[,2]
+)
+
+# Plot results or diagnostics
+plot_results(result)
+```
+
+### MaxLik for our gamma-distributed data
+
+Now, we use this package to work out the MLE estimates for our gamma-dstributed data.
+
+```{r}
+# Check if maxLik is installed, if not, install it
+if (!requireNamespace("maxLik", quietly = TRUE)) {
+  install.packages("maxLik")
+}
+
+# This function remains the same, but we'll negate it for MaxLik
+gamma_negativeLL = function(params, data) {
+  k = params[1]
+  theta = params[2]
+  n = length(data)
+  negativeLL = n*(log(gamma(k)) + (k*log(theta))) - (k - 1) * sum(log(data)) + (sum(data) / theta)
+  return (negativeLL)
+}
+
+mleGamma = function(data) {
+  xBar = mean(data)
+  xVar = var(data)
+  initK = (xBar^2)/xVar
+  initTheta = xVar/xBar
+  
+  # MaxLik maximizes, so we need to negate our negative log-likelihood function
+  mleResult = maxLik::maxLik(
+    logLik = function(params) -gamma_negativeLL(params, data),
+    start = c(k = initK, theta = initTheta),
+    method = "BFGS"  # BFGS is similar to L-BFGS-B but doesn't require bounds
+  )
+  return (coef(mleResult))
+}
+
+# Generate sample data
+set.seed(43)
+sampleData = rgamma(1000, shape = 2, scale = 3)
+
+# Estimate parameters
+MaxLikResults = mleGamma(sampleData)
+cat("Estimated shape (k):", MaxLikResults[1], "\n")
+cat("Estimated scale (theta):", MaxLikResults[2], "\n")
+```
+
+### Comparison
+
+Now, we conduct the comparison between these two methods:
+
+```{r}
+# Print results
+cat("True parameters:\n")
+cat("Shape (k):", 2, "\n")
+cat("Scale (theta):", 3, "\n\n")
+
+cat("Estimated parameters (maxLik):\n")
+cat("Shape (k):", MaxLikResults[1], "\n")
+cat("Scale (theta):", MaxLikResults[2], "\n\n")
+
+cat("Estimated parameters (stats4::mle):\n")
+cat("Shape (k):", results[1], "\n")
+cat("Scale (theta):", results[2], "\n\n")
+
+# Calculate percentage differences
+pct_diff_k = (MaxLikResults[1] - results[1]) / results[1] * 100
+pct_diff_theta = (MaxLikResults[2] - results[2]) / results[2] * 100
+
+cat("Percentage differences (maxLik vs stats4::mle):\n")
+cat("Shape (k):", round(pct_diff_k, 4), "%\n")
+cat("Scale (theta):", round(pct_diff_theta, 4), "%\n")
+```
+
+
+As we can see, we get very similar results for ML estimations of $k$ and $\theta$ from our sample data.
