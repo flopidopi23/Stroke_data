@@ -1527,7 +1527,6 @@ ggplot(stroke_data, aes(x = heart_disease, y = age, fill = heart_disease)) +
 For those without heart disease, the mean age is 41.5 years, and the median is 43 years, with a broader spread of ages. In contrast, individuals with heart disease have a much higher mean age of 68.3 years and a median of 71 years, with a tighter distribution around the higher age range. The plot highlights that heart disease is more prevalent among older individuals, with a visible difference in the central tendency between the two groups.
 
 
-```
 #### Age levels with Smoking Status/Stroke
 
 ```{r, warning=FALSE}
@@ -1807,16 +1806,128 @@ library(h2o)
 
 ### Relation between variables
 
-Boosted Logistic Regression (method = 'LogitBoost')
+#### Stroke with Gender
 
-Diagonal Discriminant Analysis (method = 'dda')
+```{r,warning=FALSE}
+tab_st_gd = table(stroke_data$stroke,stroke_data$gender)
+chisq.test(tab_st_gd)
+```
+The *p-value* is larger than 0.05 this mean that there's not evidence of independence between the variables gender and stroke. 
+
+#### Stroke with Hypertension
+
+```{r,warning=FALSE}
+tab_st_hy = table(stroke_data$stroke,stroke_data$hypertension)
+chisq.test(tab_st_hy)
+```
+The *p-value* is a lot smaller than 0.05. This mean that there's a relation between getting a stroke and hypertension. This is a could be a comprobation of the hypothesis that we established earlier about the existence of a relation between this two variables.
+
+#### Stroke with Heart Disease
+
+```{r,warning=FALSE}
+tab_st_hd = table(stroke_data$stroke,stroke_data$heart_disease)
+chisq.test(tab_st_hd)
+```
+The *p-value* is a lot smaller than 0.05. This mean that there's a relation between getting a stroke and heart disease This is a could be a comprobation of the hypothesis that we established earlier about the existence of a relation between this two variables.
+
+
+#### Stroke with Residence Type
+
+```{r,warning=FALSE}
+tab_st_rt = table(stroke_data$stroke,stroke_data$Residence_type)
+chisq.test(tab_st_rt)
+```
+As we had seen in the graph there´s no evidence to say that there's a relation between the type of residence and getting a stroke.
+
+#### Stroke with Ever Married
+
+```{r,warning=FALSE}
+tab_st_em = table(stroke_data$stroke,stroke_data$ever_married)
+chisq.test(tab_st_em)
+```
+Apparently there's a relation within this two variables. Having a stroke have a relation with have been or had been ever married. 
+
+#### Stroke with Smoking Status
+
+```{r,warning=FALSE}
+tab_st_sk = table(stroke_data$stroke,stroke_data$smoking_status)
+chisq.test(tab_st_sk)
+```
+The *p-value* is a lot smaller than 0.05 so there's is a relation between the variables. This was something that we *dont know what to write here*
+
+
+#### Stroke with Work Type
+
+```{r,warning=FALSE}
+tab_st_wt = table(stroke_data$stroke,stroke_data$work_type)
+chisq.test(tab_st_wt)
+```
+There's a relation between the variables (*p-value*<0.05). This we think was because of the difference between the quantity of people who got a stroke and work independently and the people who work with children because the difference was big between them.
+
+#### Heart Disease and Hypertension
+
+```{r,warning=FALSE}
+tab_hy_hd = table(stroke_data$heart_disease,stroke_data$hypertension)
+chisq.test(tab_hy_hd)
+```
+There's a relation between hypertension and heart disease and both variable are related to stroke. This could be a good indicator that within only one of this variables we could have the same information in the model.
+
+#### Heart Disease and Ever Married
+
+```{r,warning=FALSE}
+tab_hd_em = table(stroke_data$heart_disease,stroke_data$ever_married)
+chisq.test(tab_hd_em)
+```
+#### Heart Disease and Smoking Status
+
+```{r,warning=FALSE}
+tab_hd_sk= table(stroke_data$heart_disease,stroke_data$smoking_status)
+chisq.test(tab_hd_sk)
+```
+
+#### Heart Disease and Work Type
+
+```{r,warning=FALSE}
+tab_hd_wt = table(stroke_data$heart_disease,stroke_data$work_type)
+chisq.test(tab_hd_wt)
+```
+#### Hypertension and Ever Married
+
+```{r,warning=FALSE}
+tab_hy_em = table(stroke_data$heart_disease,stroke_data$ever_married)
+chisq.test(tab_hy_em)
+```
+
+#### Hypertension and Smoking Status
+
+```{r,warning=FALSE}
+tab_hy_sk = table(stroke_data$heart_disease,stroke_data$smoking_status)
+chisq.test(tab_hy_sk)
+```
+
+#### Hypertension and Work Type
+
+```{r,warning=FALSE}
+tab_hy_wt= table(stroke_data$heart_disease,stroke_data$work_type)
+chisq.test(tab_hy_wt)
+```
+
+# Perform a t-test
+t.test(continuous_var ~ dichotomous_var, data = your_data)
+for continuous with categorical 
+
+1) Logistic Regression 
+
+2) Diagonal Discriminant Analysis (method = 'dda')
+
+3) Xgboost for classification 0-1
 
 For classification using package sparsediscrim with tuning parameters:
 
 Model (model, character)
 
 ```{r,warning=FALSE}
-cov(stroke_data)
+
 ```
 
 
