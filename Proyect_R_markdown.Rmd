@@ -1812,7 +1812,7 @@ library(h2o)
 tab_st_gd = table(stroke_data$stroke,stroke_data$gender)
 chisq.test(tab_st_gd)
 ```
-The *p-value* is larger than 0.05 this mean that there's not evidence of independence between the variables gender and stroke. 
+The *p-value* is larger than 0.05 this mean that there's not evidence of dependency between the variables gender and stroke. 
 
 #### Stroke with Hypertension
 
@@ -1916,11 +1916,11 @@ chisq.test(tab_hy_wt)
 t.test(continuous_var ~ dichotomous_var, data = your_data)
 for continuous with categorical 
 
-1) Logistic Regression 
+1) Logistic Regression #flo
 
-2) Diagonal Discriminant Analysis (method = 'dda')
+2) VSM #soroush
 
-3) Xgboost for classification 0-1
+3) Xgboost for classification 0-1 #soroush
 
 For classification using package sparsediscrim with tuning parameters:
 
@@ -1931,7 +1931,7 @@ Model (model, character)
 ```
 
 
-Split the data to get a 80% for training and 20% for testing.
+Split the data to get a 80% for training and 20% for testing.#flo
 
 ```{r,warning =FALSE}
 head(stroke_data)
