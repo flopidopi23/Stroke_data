@@ -15,7 +15,29 @@ library(tidymodels)
 library(ROCR)
 library(ConfusionTableR)
 library(dplyr)
+library(pander)
 ```
+## Introduction
+
+This dataset is a data obtain from *kaggle* and is used to predict if a pacient will probably get a stroke based on characteristic of them like gender, age, bmi, glucose levels.\
+
+The stroke variable have a 4.8% of people have had one. We want to check the distributions of the variables and possibles explanations of which variable can make an impact to get a stroke before creating a model to proved or been proved wrong about it.\
+
+The data have the follow variables:\
+
+1)  id: unique identifier
+2)  gender: "Male", "Female" or "Other"
+3)  age: age of the patient
+4)  hypertension: 0 if the patient doesn't have hypertension, 1 if the patient has hypertension
+5)  heart_disease: 0 if the patient doesn't have any heart diseases, 1 if the patient has a heart disease
+6)  ever_married: "No" or "Yes"
+7)  work_type: "children", "Govt_jov", "Never_worked", "Private" or "Self-employed"
+8)  Residence_type: "Rural" or "Urban"
+9)  avg_glucose_level: average glucose level in blood
+10) bmi: body mass index
+11) smoking_status: "formerly smoked", "never smoked", "smokes" or "Unknown"
+12) stroke: 1 if the patient had a stroke or 0 if not
+
 
 ```{r warning=FALSE}
 path = "/Users/soroush/Desktop/UC3M/courses/R/minitask1/Stroke_data"
@@ -214,7 +236,7 @@ print(paste('Accuracy',1-misClasificError))
 
 ```
 ```{r warning=FALSE}
-confusionMatrix(as.factor(test$accu),test$stroke)
+#pander(confusionMatrix(test$accu,test$stroke))
 ```
 As you can see if we take 0.8 as the threshold we get an accuracy of 0.89 and a sensibility of 0.9.
 We will continue deleting the variable resident type because it's not hace any significance in the model.
@@ -230,7 +252,7 @@ test$accu = fitted.results
 misClasificError <- mean(fitted.results != test$stroke)
 print(paste('Accuracy',1-misClasificError))
 
-confusionMatrix(as.factor(test$accu),test$stroke)
+pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
 The AIC was reduce so the model improved just a little.
 
@@ -250,7 +272,7 @@ test$accu = fitted.results
 misClasificError <- mean(fitted.results != test$stroke)
 print(paste('Accuracy',1-misClasificError))
 
-confusionMatrix(as.factor(test$accu),test$stroke)
+pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
 ```{r warning=FALSE}
 anova(log_reg_model3,log_reg_model2)
@@ -269,7 +291,7 @@ test$accu = fitted.results
 misClasificError <- mean(fitted.results != test$stroke)
 print(paste('Accuracy',1-misClasificError))
 
-confusionMatrix(as.factor(test$accu),test$stroke)
+pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
 ```{r warning=FALSE}
 anova(log_reg_model,log_reg_model4)
@@ -278,7 +300,7 @@ The simpler model is better so as all the variables are significance in the mode
 
 ```{r warning=FALSE}
 
-exp(log_reg_model4$coefficients)
+pander(exp(log_reg_model4$coefficients))
 
 ```
 With the exp of the coefficients we get the odds of getting a stroke. Like the intercept means that if all the other variables are zero you have a 2.1% odds of getting a stroke. As we said in the preliminary analysis if you got hypertension the odd of getting a stroke duplicate. If you got a heart disease you have a 4.5% increase in your odds. 
@@ -302,11 +324,56 @@ Split the data to get a 80% for training and 20% for testing.#flo
 h2o.init()
 stroke_h2o=as.h2o(stroke_data)
 split_data = h2o.splitFrame(data=stroke_h2o,ratios=0.8,seed=23)
-train = split_data[[1]]
-test = split_data[[2]]
-pred = c("gender","age","hypertension","heart_disease","ever_married","work_type","Residence_type","avg_glucose_level","bmi","smoking_status")
-aml = h2o.automl(x=pred,y="stroke",training_frame=train,max_models=10,seed=23)
+train_h2o = split_data[[1]]
+test_h2o = split_data[[2]]
+predictor = c("gender","age","hypertension","heart_disease","ever_married","work_type","Residence_type","avg_glucose_level","bmi","smoking_status")
+aml = h2o.automl(x = predictor,y="stroke",training_frame=train_h2o,max_models=10,keep_cross_validation_predictions = TRUE,nfolds = 10,stopping_metric = "AUC",balance_classes = TRUE,seed = 23)
 lb <- aml@leaderboard
-print(lb, n = nrow(lb))
+print(lb, n = nrow(lb),extra_columns="ALL")
 
+```
+We are going to take as a initial point to create models the best 3 algorithm. In this case we will be comparing the Grading bosting machine, Generalized linear models and the eXtremely Randomized Trees.
+
+#### Gradieng Bosting Machine
+```{r warning=FALSE}
+gbm_model = h2o.gbm(x = predictor,y = "stroke",training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,seed = 23)
+
+```
+
+The performance of this model is the follow.
+
+```{r}
+gbm_perform = h2o.performance(gbm_model,newdata = test_h2o)
+print(gbm_perform)
+
+```
+
+#### Generalized Linear Models
+
+
+```{r warning=FALSE}
+glm_model = h2o.glm(x = predictor, y = "stroke", training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,family = "binomial",seed = 23)
+
+```
+
+The performance of this model is the follow.
+
+```{r}
+glm_perform = h2o.performance(glm_model,newdata = test_h2o)
+print(glm_perform)
+```
+
+#### Extremely Randomized Trees
+
+This model is a type of random Forest who takes as many trees as predictors you have.
+
+```{r warning=FALSE}
+xrt_model = h2o.randomForest(x = predictor, y = "stroke",training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,mtries = length(predictor),seed = 23)
+
+```
+The performance of this model is the follow.
+
+```{r}
+xrt_perform = h2o.performance(xrt_model,newdata = test_h2o)
+print(xrt_perform)
 ```
