@@ -378,3 +378,21 @@ The performance of this model is the follow.
 xrt_perform = h2o.performance(xrt_model,newdata = test_h2o)
 print(xrt_perform)
 ```
+When comparing the three models, we observe that each achieves high accuracy, above 80% on the test data. However, considering the variable we aim to predict—the probability of having a stroke—we want to minimize the number of high-risk individuals predicted as low-risk. This means reducing false negatives. The model that best achieves this is the GLM, which still maintains a high accuracy of 0.874.
+
+#### Ensemble model
+We will create an ensemble model with the 3 models that we just created.
+
+```{r warning=FALSE}
+base_models=list(gbm_model@model_id,xrt_model@model_id,glm_model@model_id)
+
+ensemble_model=h2o.stackedEnsemble(x=predictor,y="stroke", training_frame=train_h2o, base_models=base_models)
+```
+Now we can check the perfomance of the new model.
+```{r warning=FALSE}
+perf_ensemble=h2o.performance(ensemble_model,newdata=test_h2o)
+print(perf_ensemble)
+
+```
+The ensemble model increased accuracy by 1%, reaching a value of 88%. False positives were also reduced, so overall, the ensemble model improved performance and is better suited for the data
+
