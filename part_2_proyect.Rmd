@@ -233,6 +233,7 @@ fitted.results <- ifelse(fitted.results > 0.8,1,0)
 test$accu = fitted.results
 misClasificError <- mean(fitted.results != test$stroke)
 print(paste('Accuracy',1-misClasificError))
+pander(confusionMatrix(as.factor(test$accu),test$stroke))
 
 ```
 ```{r warning=FALSE}
