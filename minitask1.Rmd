@@ -11,13 +11,13 @@ knitr::opts_chunk$set(echo = TRUE,warning = FALSE)
 
 ## Part 1 - Apply Family
 
-The apply Family is a way to apply a function to different types of data like a row, vector, matrix, etc. This functions have been replace or you should replace it with others libraries that do the same with an optimal result. This function is an alternative to a loop when you know waht you need to do to the data. #explain why or something about the general ways of the apply family
+The apply Family is a way to apply a function to different types of data like a row, vector, matrix, etc. This functions have been replace or you should replace it with others libraries that do the same with an optimal result. This function is an alternative to a loop when you know waht you need to do to the data.
 
-The family is created by this functions; apply(), lapply() , sapply(), vapply(), mapply() and tapply() functions.
+The family is created by these functions; apply(), lapply() , sapply(), vapply(), mapply() and tapply() functions.
 
 ### apply
 
-This function can be use to an arrays in different dimensions like a matrix. You will need a X the array, Margin 1 o 2 if you want to apply the function by row (1) and over columns (2). You can also apply on both using Margin=c(1,2) and obviously the fun that will be the function that you would like to apply like the sum or the mean. Example:
+This function can be applied to arrays in different dimensions like a matrix. You will need the array(matrix), Margin 1 or 2 if you want to apply the function by row (1) and over columns (2). You can also apply to both by using "Margin=c(1,2)" and obviously the "FUN" method, which is the function that will be applied. For example the sum or the mean. Example:
 
 ```{r}
 mat = matrix(data = rnorm(20,20,4),nrow = 4,ncol = 5,byrow = TRUE)
@@ -30,7 +30,7 @@ print(sum_by_column)
 
 ### tapply
 
-Is very similar to apply but you can apply the function by groups. You can use this function to a dataframe or a matrix and you will need the data, the index that will be the factor that you want to group by and the fun. You can have more arguments but is not essential to make it work. We can transform or data to aggregate a factor variable and create and example.
+This function is very similar to apply but you can apply the function by groups. You can use this function to a data frame or a matrix and you will need the data, the index that will be the factor that you want to group by, and the FUN method. We can also have more optional arguments. We can transform the data to aggregate a factor variable and create an example.
 
 ```{r}
 data = data.frame(mat)
@@ -44,7 +44,7 @@ tapply(data$age,data$grupo,mean)
 
 ### lapply
 
-This function is apply over a list or a vector and return a list of the same lenght of the original input. This is a way to apply a function to every element on a list. The function will need the list or vector and the function that you want to apply. This mean that if you give it a vector it will apply the function to each element and if you give it a list it will apply by elements of the list.
+This function is applied over a list or a vector and returns a list of the same length of the original input. This is a way to apply a function to every element in a list. The function will need a list or a vector and the function that you want to apply. This means that if you give it a vector it will apply the function to each element and if you give it a list it will apply to the elements of the list.
 
 ```{r}
 lista = list(tr = c(1:6),mn = c(5:8))
@@ -58,7 +58,7 @@ lapply(vec, FUN = function(x) 0.5*x)
 
 ### sapply
 
-This function can by apply by a vector or list and will return a vector or a list. This function is very similar to lapply but it try to simplify it. This function is a wrapper of the lapply it can return not only a list it can return a vector, matrix or an array instead of a list. Let's do the same exercise to see the difference between both functions.
+This function can be applied to a vector or list and will return a vector or a list respectively. This function is very similar to lapply but it tries to simplify it. It is a wrapper of the lapply it can return not only a list but also a vector, matrix or an array. Let's do the same exercise to see the difference between both functions.
 
 ```{r}
 lista = list(tr = c(1:6),mn = c(5:8))
@@ -70,7 +70,7 @@ vec
 sapply(vec, FUN = function(x) 0.5*x)
 ```
 
-This function give you the same type that you give it in the input.
+This function gives you the same type that you give it in the input.
 
 ### mapply
 
@@ -82,7 +82,7 @@ mapply(sum, 1:5, 6:10)
 
 ### vapply
 
-This is a more strict version of sapply in where you need to specified the type of return that you would like.
+This is a more strict version of sapply where you need to specify the type of return that you would like.
 
 ```{r}
 my_list <- list(a = 1:5, b = 6:10)
@@ -283,9 +283,9 @@ This framework provides functionalities to easily compute the estimation of comp
 
 A summary of more important properties and features is listed below:
 
-1.  This frameowrk has a lot of different optimisation methods that allow users to easily handle their statistical models. In addition, users can define their own custom log-likelihood functions and analyse more complex models if it is not pre-defined in the framework.
+1.  This framework has a lot of different optimisation methods that allow users to easily handle their statistical models. In addition, users can define their own custom log-likelihood functions and analyse more complex models if it is not pre-defined in the framework.
 
-2.  There are many optimisation algorithms availabe to choose from. some of which are:
+2.  There are many optimisation algorithms available to choose from. some of which are:
 
     -   Newton-Raphson: A second order method to find the optimum.
     -   Berndt-Hall-Hall-Hausman (BHHH): A variant of Newton-Raphson that utilises the outer product of the gradient.
@@ -299,7 +299,7 @@ A summary of more important properties and features is listed below:
     -   Outer Product of Gradients (OPG): By utilising the outer product of the gradient vector.
     -   Sandwich Estimator: It accounts for model misspecification.
 
-4.  With MaxLik, we can impose linear or non-linear constraints on the parameters space and optimise our model that satisifes the parameter conditions.
+4.  With MaxLik, we can impose linear or non-linear constraints on the parameters space and optimise our model that satisfies the parameter conditions.
 
 5.  Moreover, we can check the quality of our estimated model with MaxLik by using a range of post-estimation tools:
 
@@ -307,7 +307,7 @@ A summary of more important properties and features is listed below:
     -   Confidence Intervals: Computed for estimated parameters to provide estimation uncertainty.
     -   Gradient and Hessian Checking: To check the accuracy of the numerical optimization and see if we have issues like non-convergence or improper model specification.
 
-6.  MaxLik offers a very user-friendly and intuitive interface. It simplifies MLE even for users without expertise in optimisation. The model need to be specifiied in normal R syntax and MaxLik can do the rest.
+6.  MaxLik offers a very user-friendly and intuitive interface. It simplifies MLE even for users without expertise in optimisation. The model need to be specified in normal R syntax and MaxLik can do the rest.
 
 7.  There are some advanced features availabe as well for more complex models and optimisations:
 
@@ -470,4 +470,4 @@ cat("Scale (theta):", round(pct_diff_theta, 4), "%\n")
 ```
 
 
-As we can see, we get very similar results for ML estimations of $k$ and $\theta$ from our sample data.
+As we can see, we get very similar results for ML estimations of $k$ and $\theta$ from both optimisation frameworks.
