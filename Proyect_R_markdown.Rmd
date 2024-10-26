@@ -1,22 +1,19 @@
 ---
 title: "Stroke dataset"
 author: 'Florencia Luque  and Seyed Amirhossein Mosaddad '
-date: "October 6, 2024"
-output:
-  pdf_document: default
-  html_document:
-    df_print: paged
-  word_document: default
+date: "October 13, 2024"
+output: "pdf_document"
 ---
 
 ```{r,echo=FALSE,warning=TRUE}
 library(ggplot2)
 library(readr)
-library(e1071)
 library(dplyr)
 library(formattable)
 library(pander)
 library(agricolae)
+library(ggmosaic)
+
 ```
 
 ## Introduction
@@ -37,7 +34,7 @@ The data have the follow variables:\
 8)  Residence_type: "Rural" or "Urban"
 9)  avg_glucose_level: average glucose level in blood
 10) bmi: body mass index
-11) smoking_status: "formerly smoked", "never smoked", "smokes" or "Unknown"\*
+11) smoking_status: "formerly smoked", "never smoked", "smokes" or "Unknown"
 12) stroke: 1 if the patient had a stroke or 0 if not
 
 The next is a summary of the data.
@@ -60,13 +57,7 @@ stroke_counts <- table(stroke_data$stroke)
 percentage_of_1 <- (stroke_counts["1"] / sum(stroke_counts)) * 100
 ```
 
-```{r}
-summary(stroke_data)
-```
-
-### Dataset
-
-We will start the analysis with the categorical variables.
+## Part 1
 
 ## Categorical Variables
 
@@ -78,11 +69,11 @@ The next table shows a summary of the quantity of people getting a stroke by gen
 
 ```{r, warning=FALSE}
 stroke_gender = stroke_data %>% group_by(stroke,gender) %>% summarise(n = n(),.groups = "drop") %>% group_by(gender) %>% mutate(percent = n/sum(n)*100)
-
 pander(stroke_gender)
 ```
 
-```{r}
+
+```{r, warning=FALSE}
 ggplot(stroke_data, aes(x = stroke, fill = gender)) +
   geom_bar(position = position_dodge(width = 0.9), width = 0.8) +
   geom_text(stat = 'count', aes(label = after_stat(count)), 
@@ -95,7 +86,7 @@ ggplot(stroke_data, aes(x = stroke, fill = gender)) +
        fill = "Gender") +
   theme_minimal() +
   theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.title = element_text(hjust = 0.2, face = "bold"),
     axis.title = element_text(face = "bold"),
     legend.title = element_text(face = "bold"),
     panel.grid.major.x = element_blank(),
@@ -114,8 +105,8 @@ pander(stroke_data %>% group_by(stroke,hypertension) %>% summarise(n = n(),.grou
 
 ```
 
-```{r}
-ggplot(stroke_data, aes(x = factor(stroke), fill = factor(hypertension))) +
+```{r, warning=FALSE}
+ggplot(stroke_data, aes(x = stroke, fill = hypertension)) +
   geom_bar(position = position_dodge(width = 0.9), width = 0.8) +
   geom_text(stat = 'count', aes(label = after_stat(count)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
@@ -148,7 +139,7 @@ pander(stroke_data %>% group_by(stroke,heart_disease) %>% summarise(n = n(),.gro
 
 ```
 
-```{r}
+```{r, warning=FALSE}
 ggplot(stroke_data, aes(x = stroke, y = ..count.., fill = heart_disease)) +
   geom_bar(position = "dodge", width = 0.7) +
   scale_fill_manual(values = c("0" = "#7BCCC4", "1" = "#FA9E9E"), labels = c("No Heart Disease", "Heart Disease")) + scale_x_discrete(labels = c("0" = "No Stroke", "1" = "Stroke")) +
@@ -179,14 +170,14 @@ The data of the people who have a heart disease look even more likely to get a s
 
 ### Ever Married
 
-```{r}
+```{r, warning=FALSE}
 pander(stroke_data %>% group_by(stroke,ever_married) %>% summarise(n = n(),.groups = "drop")%>%
   group_by(ever_married) %>% mutate(percent = n/sum(n)*100))
 
 ```
 
-```{r}
-ggplot(stroke_data, aes(x = factor(stroke), y = ..count.., fill = ever_married)) +
+```{r, warning=FALSE}
+ggplot(stroke_data, aes(x = stroke, y = ..count.., fill = ever_married)) +
   geom_bar(position = "dodge", width = 0.7) +
   scale_fill_manual(values = c("No" = "#7BCCC4", "Yes" = "#FA9E9E")) +
   scale_x_discrete(labels = c("0" = "No Stroke", "1" = "Stroke")) +
@@ -197,7 +188,7 @@ ggplot(stroke_data, aes(x = factor(stroke), y = ..count.., fill = ever_married))
     fill = "Ever Married"
   ) +
   theme_minimal() +
-  theme(
+    theme(
     plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -205,7 +196,7 @@ ggplot(stroke_data, aes(x = factor(stroke), y = ..count.., fill = ever_married))
     legend.position = "right",
     panel.grid.major.x = element_blank(),
     panel.border = element_rect(fill = NA, color = "gray80")
-  ) +
+  )+
   geom_text(stat = "count", 
             aes(label = ..count..), 
             position = position_dodge(width = 0.7), 
@@ -217,108 +208,48 @@ There are more people who are ever married and had a stroke than not ever marrie
 
 ### Work Type
 
-```{r}
+```{r, warning=FALSE}
 pander(stroke_data %>% group_by(stroke,work_type) %>% summarise(n = n(),.groups = "drop")%>%
   group_by(work_type) %>% mutate(percent = n/sum(n)*100))
 ```
 
-```{r}
-ggplot(stroke_data)+aes(x=stroke,fill=work_type) + geom_bar(position=position_dodge())+theme_minimal()
-
-```
-
-Clairly the self employed have the highest % of people who have han a stroke. This could be because of stress and the people who work with children have the lowest. Hope that working with children reduces your chances.
-
-### Resident Type
-
-```{r}
-pander(stroke_data %>% group_by(stroke,Residence_type) %>% summarise(n = n(),.groups = "drop")%>%
-  group_by(Residence_type) %>% mutate(percent = n/sum(n)*100))
-
-```
-
-```{r}
-ggplot(stroke_data, aes(x = factor(stroke), y = ..count.., fill = Residence_type)) +
-  geom_bar(position = "dodge", width = 0.7) +
-  scale_fill_manual(values = c("Rural" = "#7BCCC4", "Urban" = "#FA9E9E")) +
-  scale_x_discrete(labels = c("0" = "No Stroke", "1" = "Stroke")) +
-  labs(
-    title = "Stroke Occurrence by Residence Type",
-    x = "Stroke Occurrence",
-    y = "Number of Patients",
-    fill = "Residence Type"
-  ) +
-  theme_minimal() +
-  theme(
+```{r, warning=FALSE}
+ggplot(data = stroke_data) + 
+  geom_mosaic(aes(x = product(stroke,work_type), fill = stroke), na.rm = TRUE)+
+  theme_minimal()+
+    theme(
     plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
+    axis.text.x = element_text(angle = 90),
     legend.title = element_text(face = "bold"),
     legend.position = "right",
     panel.grid.major.x = element_blank(),
     panel.border = element_rect(fill = NA, color = "gray80")
-  ) +
-  geom_text(stat = "count", 
-            aes(label = ..count..), 
-            position = position_dodge(width = 0.7), 
-            vjust = -0.5, 
-            size = 3.5)
-
-```
-
-The part of the city that one lives looks like it might not have much impact because the percentage of stroke is very similar to the population and almost the same between the types of resident. A slightly higher percentage of urban residents (5.2%) experienced a stroke compared to rural residents (4.54%). In both groups, the majority of individuals did not experience a stroke, with 95.46% of rural residents and 94.8% of urban residents falling into the "no stroke" category. The data suggest that while stroke occurrence is relatively similar across residence types.
-
-### Smoking Status
-
-```{r}
-pander(stroke_data %>% group_by(stroke,smoking_status) %>% summarise(n = n(),.groups = "drop")%>%
-  group_by(smoking_status) %>% mutate(percent = n/sum(n)*100))
-
-```
-
-```{r}
-ggplot(stroke_data, aes(x = factor(stroke), y = ..count.., fill = smoking_status)) +
-  geom_bar(position = "dodge", width = 0.7) +
-  scale_fill_brewer(palette = "Set2") +
-  scale_x_discrete(labels = c("0" = "No Stroke", "1" = "Stroke")) +
+  )+
   labs(
-    title = "Stroke Occurrence by Smoking Status",
-    x = "Stroke Occurrence",
-    y = "Number of Patients",
-    fill = "Smoking Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.title = element_text(face = "bold"),
-    legend.position = "right",
-    panel.grid.major.x = element_blank(),
-    panel.border = element_rect(fill = NA, color = "gray80")
-  ) +
-  geom_text(stat = "count", 
-            aes(label = ..count..), 
-            position = position_dodge(width = 0.7), 
-            vjust = -0.5, 
-            size = 3.5)
+    title = "Mosaic plot for Stroke Occurrence by Work Type",
+    x = "Work Type",
+    y = "Proportions",
+    fill = "Stroke"
+  )
 
 ```
 
-The people who formerly smoked have 3% higher than the population. Those who formerly smoked have the highest stroke rate (7.92%), while current smokers have a stroke rate of 5.32%. People who have never smoked have a lower stroke rate (4.76%), and those with unknown smoking status have the lowest stroke rate (3.04%). The data suggest that individuals who have smoked at some point, either formerly or currently, are at a higher risk for stroke compared to those who have never smoked or whose smoking status is unknown. However, the highest number of patients is in the "never smoked" group.
+Clearly the self employed have the highest % of people who have had a stroke. This could be because of stress and the people who work with children have the lowest. Hope that working with children reduces your chances.
 
 ## Numeric Variables
 ### BMI
 
 The first continuous variable to evaluate will be the *bmi*. This variable is a metric that represent the relation between height and weight of a person. As you can see we have `r (201/5110)*100` % percentage of NA. However this is less than 5% so to treat this variable we will deleted all the rows with the NA in *bmi*
 
-```{r}
+```{r, warning=FALSE}
 summary(stroke_data$bmi)
 ```
 
-Next, we will check the frecquency of the data using the cut between (0-18.5] as underweight, (18.5-24.9] as normal, (24.9-29.9] as overweight, (29.9-34.9] as obese and over this as extremely obese. This value leaves over 50% of our population in normal and overweight and almost 40% in the largest side in obese and extremely obese.
+Next, we will check the frequency of the data using the cut between (0-18.5] as underweight, (18.5-24.9] as normal, (24.9-29.9] as overweight, (29.9-34.9] as obese and over this as extremely obese. This value leaves over 50% of our population in normal and overweight and almost 40% in the largest side in obese and extremely obese.
 
-```{r}
+```{r, warning=FALSE}
 stroke_data = na.omit(stroke_data)
 frec_table <- cut(stroke_data$bmi, breaks = c(0, 18.5, 24.9, 29.9, 34.9, Inf), 
                 labels = c("Underweight", "Normal", "Overweight", "Obese", "Extremely Obese"))
@@ -326,48 +257,61 @@ stroke_data$cat_weight = frec_table
 
 # Create frequency table
 bmi_freq_table <- table(frec_table)
-print(bmi_freq_table)
 bmi_rel_freq <- prop.table(bmi_freq_table)*100
-print(bmi_rel_freq)
+pander(bmi_rel_freq)
 
 
 ```
 
-If we check this with a graph we can see that the graph looks a bit symetrical with an inclination to the right. This could it mean that the distribution is not a normal like could it seem. We are going to check the kurtosis and skewness shape to check if there´s a problem.
+If we check this with a graph we can see that the graph looks a bit symmetrical with an inclination to the right. This could it mean that the distribution is not a normal like could it seem. We are going to check the kurtosis and skewness shape to check if there´s a problem.
 
 ```{r,include=FALSE}
 aux_bmi = hist(stroke_data$bmi)
 ```
 
-```{r}
+```{r, warning=FALSE}
 stat.freq(aux_bmi)
 ```
 
 ```{r, warning = FALSE}
-
-
 ggplot(stroke_data, aes(x=bmi)) + 
   geom_histogram(color="black", fill="cadetblue1")+
-  labs(title = "BMI Distribution")
-
-
-
+  labs(title = "BMI Distribution")+
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 
 bmi_mean <- mean(stroke_data$bmi)
 bmi_median <- median(stroke_data$bmi)
 
 # Density plot with a vertical line at the mean
-ggplot(stroke_data, aes(x = stroke_data$bmi)) +
+ggplot(stroke_data, aes(x = bmi)) +
   geom_density(fill = "aquamarine1", alpha = 0.6) +
   geom_vline(aes(xintercept = bmi_mean), color = "dodgerblue2", linetype = "dashed", size = 1) +
   geom_vline(aes(xintercept = bmi_median), color = "hotpink1", linetype = "dotted", size = 1) +
   labs(title = "Density Plot of BMI with Mean and Median", x = "BMI", y = "Density") +
   annotate("text", x = bmi_mean + 0.5, y = 0.02, label = paste("Mean =", round(bmi_mean, 2)), color = "dodgerblue2") +
   annotate("text", x = bmi_median - 0.5, y = 0.015, label = paste("Median =", round(bmi_median, 2)), color = "hotpink1") +
-  theme_minimal()
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
 
-```{r}
+```{r, warning=FALSE}
 skewness(stroke_data$bmi)
 kurtosis(stroke_data$bmi)
 ```
@@ -378,18 +322,36 @@ Looking only at the graph we expected that the Kurtosis was close to 3 but a 3.3
 
 To see if the outliers are correctly in the heavier side we can check the boxplot of the *bmi*
 
-```{r}
+```{r, warning=FALSE}
 ggplot(stroke_data, aes(y = stroke_data$bmi)) + 
   geom_boxplot(fill = "lightblue", color = "darkblue") + # Change box and border color
   labs(title = "Boxplot of BMI", y = "BMI Values") + # Custom title and labels
-  theme_minimal()
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
 
 As you can see with the boxplot we can make sure that the *bmi* data have outliers within the largest values. The problem with this data is that we can not be sure if this is a mistake in the part of measure or maybe exist people with those values. YOu can see this in the qqplot next.
 
-```{r}
+```{r, warning=FALSE}
 ggplot(stroke_data, aes(sample=bmi)) + stat_qq(size=2,color=rainbow(4908))+stat_qq_line()+theme_minimal()+
-  labs(title = "QQ plot for bmi")
+  labs(title = "QQ plot for bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 
 ```
 
@@ -399,116 +361,189 @@ ggplot(stroke_data, aes(sample=bmi)) + stat_qq(size=2,color=rainbow(4908))+stat_
 
 
 data_sub_bmi_catw= stroke_data %>% group_by(cat_weight,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_catw)
+pander(data_sub_bmi_catw)
 
 ggplot(stroke_data, aes(x = bmi, fill = stroke)) + 
   geom_histogram(binwidth = 3)+
-  facet_wrap(~stroke)+theme_minimal()+labs(title = "bmi histogram by stroke",x="bmi",y="count")
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "Bmi histogram by Stroke OCurrence",x="Bmi",y="count")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 
 ggplot(stroke_data, aes(sample = bmi, fill = stroke))+
   stat_qq(size=2)+ stat_qq_line() +
-  facet_wrap(~stroke)+theme_minimal()+labs(title = "bmi qqplot by stroke",x="stroke",y="count")
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "Bmi qqplot by Stroke Ocurrence",x="Stroke Ocurrence",y="count")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 
 ggplot(stroke_data, aes(y = bmi, fill =stroke))+
   geom_boxplot()+
-  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi boxplot by stroke",x="stroke",y="count")
+  facet_wrap(~stroke)+theme_minimal()+labs(title = "Bmi boxplot by Stroke Ocurrence",x="Stroke Ocurrence",y="count")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
-
+When you compare the distribution of *bmi* by stroke you can see that for the individuals who did not have a stroke you have more outliers in the right tail and for those who had one the distribution is a bit closer to a normal one. The bmi is a little bit higher over all with a stroke and the values are more concentrate. This doesn't show us any indication that the *bmi* could have a impact on getting a stroke.
 #### BMI with gender
 
 ```{r,warning=FALSE}
 #gender
 
 data_sub_bmi_gender= stroke_data %>% group_by(gender,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_gender)
+pander(data_sub_bmi_gender)
 
 
 ggplot(stroke_data, aes(y = bmi, fill = gender))+
   geom_boxplot()+
-  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi boxplot by gender",x="gender",y="count")
+  facet_wrap(~gender)+theme_minimal()+labs(title = "Bmi boxplot by Gender",x="Gender",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 
 
 ```
-
+The *bmi* of females and males is very similar in distribution. The males have more outliers. The mean is higher for those who had a stroke in both genders. Those males who had an stroke have a bigger *bmi* almost a 2 increase in the mean.
 #### BMI with hypertension
 
 ```{r,warning=FALSE}
 #hypertension
 
 data_sub_bmi_hyper= stroke_data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_hyper)
+pander(data_sub_bmi_hyper)
 
 ggplot(stroke_data, aes(y = bmi, fill =hypertension))+
   geom_boxplot()+
-  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi boxplot by hypertension",x="hypertension",y="count")
+  facet_wrap(~hypertension)+theme_minimal()+labs(title = "Bmi boxplot by Hypertension",x="",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
-
+The *bmi* for people who have hypertension is over all bigger.The distributions look very similar. The mean for those you had have a stroke is bigger with or without hypertension. This could indicate that with hypertension your changes could increase.
 #### BMI by heart diseased
 
 ```{r, warning=FALSE}
 
 
 data_sub_bmi_hd= stroke_data %>% group_by(heart_disease,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_hd)
+pander(data_sub_bmi_hd)
 
 
 ggplot(stroke_data, aes(y = bmi, fill =heart_disease))+
   geom_boxplot()+
-  facet_wrap(~gender)+theme_minimal()+labs(title = "bmi boxplot by heart disease",x="heart disease",y="count")
+  facet_wrap(~heart_disease)+theme_minimal()+labs(title = "Bmi boxplot by Heart Disease",x="",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
+The distribution os those who don't have a heart disease is more dispersed. You can see a concentration of the *bmi* for the ones that have a heart disease. The mean over all for those you have a heart disease is bigger and you can see the gap between those who had a stroke and those who didn't. 
 
-s#### BMI by ever married
+#### BMI by ever married
 
 ```{r, warning=FALSE}
 
 
 data_sub_bmi_em= stroke_data %>% group_by(ever_married,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_em)
+pander(data_sub_bmi_em)
 
 
 ggplot(stroke_data, aes(y = bmi, fill =ever_married))+
   geom_boxplot()+
-  facet_wrap(~ever_married)+theme_minimal()+labs(title = "bmi boxplot by ever married",x="ever married",y="count")
+  facet_wrap(~ever_married)+theme_minimal()+labs(title = "Bmi boxplot by Ever Married",x="",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
-
+With this data we can say that have been ever been married make the *bmi* higher over all. You can see that in both cases there's outliers and they have very similar distributions. For the mean you can see a bigger difference with it the one that haven't been married and had have a stroke with a difference of 4.
 #### BMI by work type
 
 ```{r, warning=FALSE}
 data_sub_bmi_wt= stroke_data %>% group_by(work_type,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_wt)
+pander(data_sub_bmi_wt)
 
-ggplot(stroke_data, aes(y = bmi, fill =stroke))+
+ggplot(stroke_data, aes(y = bmi, fill =work_type))+
   geom_boxplot()+
-  facet_wrap(~work_type)+theme_minimal()+labs(title = "bmi boxplot by stroke",x="work type",y="count")
+  facet_wrap(~work_type)+theme_minimal()+labs(title = "Bmi boxplot by Work Type",x="",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
+The work type looks like if you never work or you work with children your over all *bmi* will be lower and if you work in any other type of work your *bmi* will be higher. If we add the stroke we can see that if you work with children and you had have a stroke the mean of the *bmi* is the higher. If you self-employed or work with the government those who had a stroke had lower *bmi* than those you didn't. This could be a stroke by stress. 
 
 #### BMI by resident type
 
 ```{r, warning=FALSE}
 data_sub_bmi_tr= stroke_data %>% group_by(Residence_type,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_tr)
+pander(data_sub_bmi_tr)
 
 ggplot(stroke_data, aes(y = bmi, fill =Residence_type))+
   geom_boxplot()+
-  facet_wrap(~Residence_type)+theme_minimal()+labs(title = "bmi boxplot by resident type",x="resident type",y="count")
+  facet_wrap(~Residence_type)+theme_minimal()+labs(title = "Bmi boxplot by Resident Type",x="",y="Bmi")+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
+The type of resident is almost identical as the over all *bmi* population. The mean didn't have any difference with the population. This could mean that the type of resident doesn't have any effect on the *bmi*.
 
-#### BMI by smoking status
-
-```{r, warning=FALSE}
-data_sub_bmi_catw= stroke_data %>% group_by(smoking_status,stroke) %>% summarise(mean = mean(bmi),.groups = "drop")
-print(data_sub_bmi_catw)
-
-ggplot(stroke_data, aes(y = bmi, fill =smoking_status))+
-  geom_boxplot()+
-  facet_wrap(~smoking_status)+theme_minimal()+labs(title = "bmi boxplot by smoking status",x="smoking status",y="count")
-```
-
-### Glucose levels
+### Glucose levels 
 
 The second continuous variable that we examine is average glucose levels. This variable measures on average, the amount of glucose found in blood.
 
-```{r}
+```{r, warning=FALSE}
 summary(stroke_data$avg_glucose_level)
 
 ```
@@ -529,18 +564,10 @@ These categories correspond to the standard clinical definitions for fasting glu
 
 -   Diabetes: 126 mg/dL or higher
 
-```{r}
+```{r, warning=FALSE}
 glc_mean <- mean(stroke_data$avg_glucose_level)
 glc_median <- median(stroke_data$avg_glucose_level)
 
-# Remove any NA values if present
-stroke_data = na.omit(stroke_data)
-
-# Create categories for glucose levels
-# Categories based on common medical standards:
-# Normal: <100 mg/dL
-# Prediabetes: 100-125 mg/dL
-# Diabetes: >=126 mg/dL
 glucose_categories <- cut(stroke_data$avg_glucose_level, 
                           breaks = c(0, 99.9, 125.9, Inf),
                           labels = c("Normal", "Prediabetes", "Diabetes"))
@@ -553,61 +580,47 @@ stroke_data$glucose_category = glucose_categories
 
 # Create frequency table
 glucose_freq_table <- table(glucose_categories)
-print(glucose_freq_table)
-
 # Calculate relative frequencies
 glucose_rel_freq <- prop.table(glucose_freq_table) * 100
-print(glucose_rel_freq)
+pander(glucose_rel_freq)
+```
+```{r,include=FALSE}
+hist_glu = hist(stroke_data$avg_glucose_level)
+
 ```
 
-```{r}
-# Custom function to calculate frequency statistics
-custom_stat_freq <- function(x) {
-  list(
-    variance = var(x, na.rm = TRUE),
-    mean = mean(x, na.rm = TRUE),
-    median = median(x, na.rm = TRUE),
-    mode = as.numeric(names(which.max(table(round(x, 1)))))
-  )
-}
 
-# Calculate frequency statistics for glucose levels
-glucose_freq_stats <- custom_stat_freq(stroke_data$avg_glucose_level)
+```{r, warning=FALSE}
+stats_glu = stat.freq(hist_glu)
 
-# Print the results
-print(glucose_freq_stats)
 
 # If you want a more formatted output:
-cat("Variance:", glucose_freq_stats$variance, "\n")
-cat("Mean:", glucose_freq_stats$mean, "\n")
-cat("Median:", glucose_freq_stats$median, "\n")
-cat("Mode:", glucose_freq_stats$mode, "\n")
+cat("Variance:", stats_glu$variance, "\n")
+cat("Mean:", stats_glu$mean, "\n")
+cat("Median:", stats_glu$median, "\n")
+cat("Mode:", stats_glu$mode, "\n")
 ```
 
 As we can see:
 
 -   The mean glucose level (105.30 mg/dL) falls within the prediabetes range, suggesting that on average, the population has slightly elevated glucose levels.
 
--   However, the median (91.68 mg/dL) is in the normal range, indicating that more than half of the population has normal glucose levels.
+-   However, the median (92.5 mg/dL) is in the normal range, indicating that more than half of the population has normal glucose levels.
 
--   The mode (82.40 mg/dL) being well within the normal range suggests that normal glucose levels are the most common in the dataset.
+-   The mode is (85.5 mg/dL) being well within the normal range suggests that normal glucose levels are the most common in the dataset.
 
-In addition, the high variance (1973.63) indicates considerable spread in the glucose levels, which is consistent with the presence of both normal and elevated (prediabetic and diabetic) levels in the population.
+In addition, the high variance (2012.65) indicates considerable spread in the glucose levels, which is consistent with the presence of both normal and elevated (prediabetic and diabetic) levels in the population.
 
 The mean being higher than the median suggests a right-skewed distribution. This is consistent with having a majority in the normal range but a significant number of higher values pulling the mean up. While the majority (61.61%) have normal glucose levels, the combined 38.38% with prediabetes or diabetes represents a significant portion of the population at increased risk for various health issues, including potentially higher stroke risk.
 
-The mean (105.30 mg/dL) being in the prediabetic range while the median (91.68 mg/dL) is in the normal range highlights the impact of the higher values on the overall distribution.
+The mean (105.30 mg/dL) being in the prediabetic range while the median (92.5 mg/dL) is in the normal range highlights the impact of the higher values on the overall distribution.
 
-```{r}
-# Calculate mean and median
-glc_mean <- mean(stroke_data$avg_glucose_level, na.rm = TRUE)
-glc_median <- median(stroke_data$avg_glucose_level, na.rm = TRUE)
-
+```{r, warning=FALSE}
 # Create the plot
 ggplot(stroke_data, aes(x = avg_glucose_level)) +
   geom_density(fill = "skyblue", color = "steelblue", alpha = 0.7) +
-  geom_vline(aes(xintercept = glc_mean), color = "darkblue", linetype = "dashed", size = 1) +
-  geom_vline(aes(xintercept = glc_median), color = "darkred", linetype = "dotted", size = 1) +
+  geom_vline(aes(xintercept = stats_glu$mean), color = "darkblue", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = stats_glu$median), color = "darkred", linetype = "dotted", size = 1) +
   labs(
     title = "Distribution of Average Glucose Levels",
     subtitle = "With Mean and Median",
@@ -615,32 +628,33 @@ ggplot(stroke_data, aes(x = avg_glucose_level)) +
     y = "Density",
     caption = "Graph x"
   ) +
-  annotate("text", x = glc_mean, y = 0.024, 
-           label = paste("Mean =", round(glc_mean, 2)), 
+  annotate("text", x = stats_glu$mean, y = 0.024, 
+           label = paste("Mean =", round(stats_glu$mean, 2)), 
            color = "darkblue", hjust = -0.1, size = 4, fontface = "bold") +
-  annotate("text", x = glc_median, y = 0.022, 
-           label = paste("Median =", round(glc_median, 2)), 
+  annotate("text", x = stats_glu$median, y = 0.022, 
+           label = paste("Median =", round(stats_glu$median, 2)), 
            color = "darkred", hjust = 1.1, size = 4, fontface = "bold") +
   annotate("text", x = 100, y = 0.02, label = "Normal", color = "darkgreen", size = 4, fontface = 3) +
   annotate("text", x = 112.5, y = 0.018, label = "Prediabetes", color = "orange", size = 4, fontface = 3) +
   annotate("text", x = 150, y = 0.016, label = "Diabetes", color = "red", size = 4, fontface = 3) +
   geom_vline(xintercept = c(100, 126), color = "gray", linetype = "longdash", size = 0.5) +
   scale_x_continuous(breaks = seq(50, 300, by = 50), limits = c(50, 300)) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(size = 16, face = "bold"),
-    plot.subtitle = element_text(size = 12, face = "italic"),
-    axis.title = element_text(size = 12, face = "bold"),
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
-    legend.position = "none",
-    panel.grid.minor = element_blank()
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
   )
 
 ```
 
 As we can see, the graph confirms our findings from the frequency tables we had above. The distribution is not normal and heavily skewed to the right due to extreme values of Glucose level.
 
-```{r}
+```{r, warning=FALSE}
 skewness(stroke_data$avg_glucose_level)
 kurtosis(stroke_data$avg_glucose_level)
 ```
@@ -649,7 +663,7 @@ The value of Skewness also confirms this substantial right skew. This suggests a
 
 The positive value of Kurtosis also confirms that the distribution has more extreme values (in the tails) than a normal distribution would. Our value of 1.907085 suggests the distribution has heavier tails and a higher, sharper peak compared to a normal distribution.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 q1 <- quantile(stroke_data$avg_glucose_level, 0.25)
 q3 <- quantile(stroke_data$avg_glucose_level, 0.75)
@@ -659,7 +673,6 @@ upper_whisker <- min(max(stroke_data$avg_glucose_level), q3 + 1.5 * iqr)
 
 ggplot(stroke_data, aes(y = avg_glucose_level, x = "")) + 
   geom_boxplot(fill = "lightblue", color = "darkblue", outlier.colour = "red", outlier.shape = 16) +
-  geom_jitter(width = 0.2, alpha = 0.1, color = "darkgrey") +  # Add jittered points
   stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white") +  # Add mean point
   geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "orange", size = 0.5) +  # Add reference lines
   scale_y_continuous(breaks = seq(0, 300, by = 50)) +
@@ -679,23 +692,24 @@ ggplot(stroke_data, aes(y = avg_glucose_level, x = "")) +
   annotate("text", x = 0.7, y = median(stroke_data$avg_glucose_level), 
            label = paste("Median:", round(median(stroke_data$avg_glucose_level), 1)), 
            hjust = 0, size = 3) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank()
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
   )
 ```
 
 The box plot also confirms our findings that there is a concentration of values around the peak (likely in the normal glucose range) with a notable number of extreme values (likely in the diabetic range).
 
-```{r}
+```{r, warning=FALSE}
 ggplot(stroke_data, aes(sample = avg_glucose_level)) + 
   stat_qq(size = 2, alpha = 0.6) +
   stat_qq_line(color = "red", size = 1) +
-  geom_abline(intercept = 0, slope = 1, color = "blue", linetype = "dashed", size = 1) +
   labs(
     title = "Q-Q Plot for Average Glucose Levels",
     subtitle = "Comparing sample quantiles to theoretical quantiles of a normal distribution",
@@ -703,23 +717,15 @@ ggplot(stroke_data, aes(sample = avg_glucose_level)) +
     y = "Sample Quantiles (Glucose Levels mg/dL)"
   ) +
   scale_y_continuous(breaks = seq(0, 300, by = 50)) +
-  annotate("text", x = -2, y = max(stroke_data$avg_glucose_level), 
-           label = "Reference Line (y=x)", color = "blue", hjust = 0, vjust = 1) +
-  annotate("text", x = 2, y = min(stroke_data$avg_glucose_level), 
-           label = "QQ Line", color = "red", hjust = 1, vjust = 0) +
-  # Add reference lines for important glucose levels
-  geom_hline(yintercept = 100, color = "darkgreen", linetype = "dotted") +
-  geom_hline(yintercept = 126, color = "darkgreen", linetype = "dotted") +
-  annotate("text", x = -3, y = 100, label = "Prediabetes threshold (100 mg/dL)", 
-           color = "darkgreen", hjust = 0, vjust = -0.5) +
-  annotate("text", x = -3, y = 126, label = "Diabetes threshold (126 mg/dL)", 
-           color = "darkgreen", hjust = 0, vjust = -0.5) +
   theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
   )
 
 ```
@@ -728,7 +734,7 @@ This Q-Q plot also confirms that the average Glucose levels do not follow a norm
 
 #### Avg. Glucose levels with stroke
 
-```{r}
+```{r, warning=FALSE}
 # categorize glucose levels
 dataG <- stroke_data %>%
   mutate(glucose_category = case_when(
@@ -748,259 +754,86 @@ pander(data_sub_glucose_cat)
 
 From the table, we can see that the most significant difference is in the Diabetes category, where those with stroke had substantially higher mean glucose levels. In the Normal and Prediabetes categories, there is minimal difference between stroke and no-stroke groups. The data suggests that very high glucose levels (Diabetes range) may be associated with increased stroke risk.
 
-```{r, warning=FALSE}
-# Calculate means for annotation
-mean_glucose <- stroke_data %>%
+```{r,warning=FALSE}
+stats_glucose <- stroke_data %>%
   group_by(stroke) %>%
-  summarise(mean_glucose = mean(avg_glucose_level, na.rm = TRUE))
+  summarise(mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
+            median_glucose = median(avg_glucose_level, na.rm = TRUE))
 
 ggplot(stroke_data, aes(x = avg_glucose_level, fill = stroke)) + 
   geom_histogram(binwidth = 5, color = "white", alpha = 0.7) +
-  geom_vline(data = mean_glucose, aes(xintercept = mean_glucose, color = stroke),
-             linetype = "dashed", size = 1) +
+geom_vline(data = stats_glucose, aes(xintercept = mean_glucose), 
+             linetype = "dashed", color = "blue", size = 1) +
+    geom_vline(data = stats_glucose, aes(xintercept = median_glucose), 
+             linetype = "dotted", color = "red", size = 1) +
   facet_wrap(~stroke, scales = "free_y", 
-             labeller = labeller(stroke = c("0" = "No Stroke", "1" = "Stroke"))) +
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
-                    labels = c("0" = "No Stroke", "1" = "Stroke")) +
-  scale_color_manual(values = c("0" = "blue", "1" = "red")) +
-  scale_x_continuous(breaks = seq(0, 300, by = 50)) +
+             labeller = labeller(stroke = c("0" = "No Stroke", "1" = "Stroke")))  +
   labs(
     title = "Distribution of Average Glucose Levels by Stroke Status",
-    subtitle = "With mean glucose level and clinical thresholds indicated",
+    subtitle = "With mean and median glucose levels indicated",
     x = "Average Glucose Level (mg/dL)",
-    y = "Count",
-    fill = "Stroke Status"
+    y = "Count"
   ) +
-  geom_vline(xintercept = c(100, 126), linetype = "dotted", color = "darkgreen", size = 0.5) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    legend.position = "none",
-    strip.text = element_text(face = "bold", size = 12)
-  ) +
-  geom_text(data = mean_glucose, 
-            aes(x = mean_glucose, y = Inf, label = paste("Mean:", round(mean_glucose, 1))),
-            vjust = 1.5, hjust = 1.1, color = "black", size = 3.5) +
-  # Add annotations for thresholds to both facets
-  geom_text(data = data.frame(x = c(100, 126), 
-                              y = Inf, 
-                              label = c("Prediabetes", "Diabetes"),
-                              stroke = factor(c(0, 0))),  # Add to first facet
-            aes(x = x, y = y, label = label),
-            vjust = 1, hjust = 1.1, color = "darkgreen", angle = 90, size = 3) +
-  geom_text(data = data.frame(x = c(100, 126), 
-                              y = Inf, 
-                              label = c("Prediabetes", "Diabetes"),
-                              stroke = factor(c(1, 1))),  # Add to second facet
-            aes(x = x, y = y, label = label),
-            vjust = 1, hjust = 1.1, color = "darkgreen", angle = 90, size = 3)
+  geom_text(data = stats_glucose, aes(x = mean_glucose, y = 20, label = round(mean_glucose, 1)), 
+            vjust = -1, color = "blue", size = 3.5) +
+  geom_text(data = stats_glucose, aes(x = median_glucose, y = 15, label = round(median_glucose, 1)), 
+            vjust = -1, color = "red", size = 3.5) +
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
-
 As we can see, On average, those who had a stroke have significantly higher glucose levels (mean: 134.68 mg/dL) compared to those without a stroke (mean: 104 mg/dL). A higher proportion of stroke patients fall into the prediabetes and diabetes ranges, as indicated by the clinical thresholds. This suggests a potential association between elevated glucose levels and stroke occurrence.
 
-```{r}
-ggplot(stroke_data, aes(sample = avg_glucose_level, color = factor(stroke))) +
+```{r, warning=FALSE}
+ggplot(stroke_data, aes(sample = avg_glucose_level, color = stroke)) +
   stat_qq(size = 2) + 
   stat_qq_line() +
-  facet_wrap(~stroke, labeller = labeller(stroke = c("0" = "No Stroke", "1" = "Stroke"))) +
-  scale_color_manual(values = c("0" = "skyblue", "1" = "salmon")) +
+  facet_wrap(~stroke) +
   labs(
     title = "Q-Q Plot of Average Glucose Levels by Stroke Status",
     subtitle = "Comparing the distribution to a normal distribution",
     x = "Theoretical Quantiles",
     y = "Sample Quantiles (Glucose Levels mg/dL)"
   ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    legend.position = "none",
-    strip.text = element_text(face = "bold", size = 12)
-  ) +
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkgreen", size = 0.5)
-
-
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
 
 From these two Q-Q plots, we can observe that for both groups, the points deviate from the diagonal line, indicating that the glucose levels do not follow a normal distribution. In addition, the deviation is more pronounced in the stroke group, where higher glucose levels show a greater departure from normality, particularly in the upper quantiles.This suggests that the stroke group has a higher concentration of extreme glucose values compared to the no-stroke group, further supporting the observed association between elevated glucose levels and stroke.
 
 #### Avg. Glucose levels with gender/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_gd= stroke_data %>% group_by(gender,stroke) %>% summarise(mean_avg_glucose_level = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_gd)
 ```
 
 From above, we can see the mean average glucose levels for males and females with and without a history of stroke. For both genders, individuals who have had a stroke exhibit significantly higher average glucose levels compared to those who have not. In particular, males with a stroke have the highest mean glucose level (145.85 mg/dL), followed by females with a stroke (126.21 mg/dL). Males without a stroke have a slightly higher mean glucose level (106.39 mg/dL) compared to females without a stroke (102.34 mg/dL).
 
-```{r, warning=FALSE}
-# Calculate mean and median glucose levels for each gender
-gender_stats <- stroke_data %>%
-  group_by(gender) %>%
-  summarise(
-    mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
-    median_glucose = median(avg_glucose_level, na.rm = TRUE)
-  )
-
-ggplot(stroke_data, aes(x = gender, y = avg_glucose_level, fill = gender)) + 
-  geom_boxplot(width = 0.5, alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
-  geom_hline(yintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
-  scale_fill_manual(values = c("Male" = "skyblue", "Female" = "pink")) +
-  scale_y_continuous(breaks = seq(0, 300, by = 50)) +
-  labs(
-    title = "Distribution of Average Glucose Levels by Gender",
-    subtitle = "With mean, median, and clinical thresholds indicated",
-    x = "Gender",
-    y = "Average Glucose Level (mg/dL)",
-    fill = "Gender"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "none",
-    panel.grid.major.x = element_blank()
-  ) +
-  geom_text(data = gender_stats, aes(x = gender, y = mean_glucose, 
-                                     label = paste("Mean:", round(mean_glucose, 1))),
-            color = "red", vjust = -1, size = 3.5, fontface = "bold") +
-  geom_text(data = gender_stats, aes(x = gender, y = median_glucose, 
-                                     label = paste("Median:", round(median_glucose, 1))),
-            color = "blue", vjust = 2, size = 3.5, fontface = "bold") +
-  annotate("text", x = 0.5, y = c(100, 126), 
-           label = c("Prediabetes Threshold (100 mg/dL)", "Diabetes Threshold (126 mg/dL)"),
-           hjust = 0, vjust = -0.5, color = "darkgreen", size = 3.5, fontface = "italic") +
-  coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
-```
-
-The plot shows the distribution of average glucose levels by gender, with both male and female groups represented. The median glucose level for females is 90.5 mg/dL, while for males, it is slightly higher at 93.5 mg/dL. The mean glucose level is also higher in males (108.1 mg/dL) compared to females (103.3 mg/dL). Clinical thresholds are indicated with the prediabetes threshold at 100 mg/dL and the diabetes threshold at 126 mg/dL. Both genders have average glucose levels that mostly fall below the diabetes threshold, with more variability observed among males.
-
-```{r, warning=FALSE}
-# Define labels for stroke and gender
-stroke_labels <- c("0" = "No Stroke", "1" = "Stroke")
-gender_labels <- c("Male" = "Male", "Female" = "Female")
-
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(gender, stroke) %>%
-  summarise(
-    mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
-    median_glucose = median(avg_glucose_level, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the corrected violin plot
-ggplot(stroke_data, aes(x = gender, y = avg_glucose_level, fill = stroke)) +
-  geom_violin(trim = FALSE, alpha = 0.7) +
-  geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"), labels = stroke_labels) +
-  facet_wrap(~stroke, labeller = as_labeller(stroke_labels)) +
-  labs(
-    title = "Distribution of Average Glucose Levels by Stroke Status and Gender",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
-    x = "Gender",
-    y = "Average Glucose Level (mg/dL)",
-    fill = "Stroke Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "none",
-    strip.text = element_text(size = 12, face = "bold")
-  ) +
-  geom_text(data = summary_stats, 
-            aes(x = gender, y = mean_glucose, 
-                label = paste("Mean:", round(mean_glucose, 1))),
-            color = "red", vjust = -1, size = 3, fontface = "bold") +
-  geom_text(data = summary_stats, 
-            aes(x = gender, y = median_glucose, 
-                label = paste("Median:", round(median_glucose, 1))),
-            color = "blue", vjust = 2, size = 3, fontface = "bold") +
-  coord_cartesian(ylim = c(min(stroke_data$avg_glucose_level, na.rm = TRUE), 
-                           max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.1))
-```
-
-The plot shows the shape of the distribution, along with the mean and median glucose levels, and clinical thresholds for prediabetes and diabetes. Males who had a stroke have the highest mean glucose level (145.8 mg/dL) and a distribution skewed towards higher glucose levels. Females who had a stroke have a mean of 126.2 mg/dL, while individuals without a stroke tend to have lower glucose levels, with males averaging 106.4 mg/dL and females 102.3 mg/dL. This highlights that stroke patients tend to have higher glucose levels, particularly among males.
-
-
 #### Avg. Glucose levels with hypertension/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_hyp= stroke_data %>% group_by(hypertension,stroke) %>% summarise(mean = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_hyp)
 ```
 The data indicates that individuals with both hypertension and a history of stroke have the highest mean glucose level (145.90 mg/dL), followed by those with hypertension but no stroke (128.16 mg/dL). Individuals without hypertension who have had a stroke have a mean glucose level of 130.01 mg/dL, while those without hypertension or stroke have the lowest mean glucose level (101.80 mg/dL). These findings suggest that both hypertension and stroke are associated with elevated glucose levels.
 
-```{r}
-# Calculate summary statistics without using factor function
-summary_stats <- stroke_data %>%
-  group_by(hypertension) %>%
-  summarise(
-    mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
-    median_glucose = median(avg_glucose_level, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the plot without factor function and with correct labels
-ggplot(stroke_data, aes(x = avg_glucose_level, fill = hypertension)) + 
-  geom_histogram(binwidth = 5, color = "white", alpha = 0.7) +
-  facet_wrap(~hypertension, scales = "free_y") +
-  geom_vline(data = summary_stats, aes(xintercept = mean_glucose), color = "red", linetype = "dashed", size = 1) +
-  geom_vline(data = summary_stats, aes(xintercept = median_glucose), color = "blue", linetype = "dotted", size = 1) +
-  geom_vline(xintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
-  
-  # Correct label mappings without using factor
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
-                    labels = c("No Hypertension", "Hypertension")) +
-  
-  # Adjust x-axis breaks
-  scale_x_continuous(breaks = seq(50, 300, by = 50)) +
-  
-  # Add plot labels
-  labs(
-    title = "Distribution of Average Glucose Levels by Hypertension Status",
-    subtitle = "With mean, median, and clinical thresholds indicated",
-    x = "Average Glucose Level (mg/dL)",
-    y = "Count",
-    fill = "Hypertension Status"
-  ) +
-  
-  # Customize theme
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    legend.position = "none",
-    strip.text = element_text(face = "bold", size = 12)
-  ) +
-  
-  # Add mean and median text labels
-  geom_text(data = summary_stats, aes(x = mean_glucose, y = Inf, label = paste("Mean:", round(mean_glucose, 1))),
-            color = "red", hjust = 1.1, vjust = 2, size = 3) +
-  geom_text(data = summary_stats, aes(x = median_glucose, y = Inf, label = paste("Median:", round(median_glucose, 1))),
-            color = "blue", hjust = -0.1, vjust = 2, size = 3) +
-  
-  # Annotate clinical thresholds
-  annotate("text", x = 100, y = Inf, label = "Prediabetes", color = "darkgreen", hjust = 1.1, vjust = 4, size = 3) +
-  annotate("text", x = 126, y = Inf, label = "Diabetes", color = "darkgreen", hjust = -0.1, vjust = 4, size = 3)
-
-```
-
-
-No Hypertension Group (left panel): Individuals without hypertension have a mean glucose level of 102.7 mg/dL, with the majority falling below the prediabetes threshold (100 mg/dL). The median glucose level is slightly lower at 90.7 mg/dL, showing that most of the data is concentrated in the lower glucose ranges. This group has a healthy distribution, as very few individuals approach the diabetes threshold.
-
-Hypertension Group (right panel): Individuals with hypertension have a higher mean glucose level of 130.5 mg/dL and a median of 104.4 mg/dL, with the majority falling above the prediabetes threshold. A substantial portion of this group reaches or exceeds the diabetes threshold, indicating that hypertension is associated with significantly higher glucose levels. This group also has a wider spread, with several individuals displaying glucose levels well beyond 200 mg/dL.
-
-```{r}
+```{r, warning=FALSE}
 # Calculate mean and median glucose levels for each group
 summary_stats <- stroke_data %>%
   group_by(hypertension, stroke) %>%
@@ -1020,7 +853,6 @@ ggplot(stroke_data, aes(x = interaction(stroke, hypertension), y = avg_glucose_l
                                "No Hypertension, Stroke", "Hypertension, Stroke")) +
   scale_x_discrete(labels = c("No Hypertension\nNo Stroke", "Hypertension\nNo Stroke", 
                               "No Hypertension\nStroke", "Hypertension\nStroke")) +
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkred", size = 0.5) +
   geom_text(data = summary_stats, aes(x = interaction(stroke, hypertension), y = mean_glucose, 
                                       label = paste("Mean:", round(mean_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = -0.5, color = "red", size = 3) +
@@ -1034,24 +866,22 @@ ggplot(stroke_data, aes(x = interaction(stroke, hypertension), y = avg_glucose_l
     y = "Average Glucose Level (mg/dL)",
     fill = "Group"
   ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    legend.position = "top",
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.major.x = element_blank()
-  ) +
-  annotate("text", x = 0.1, y = c(100, 126), label = c("Prediabetes", "Diabetes"),
-           hjust = 0, vjust = -0.5, color = "darkred", size = 3) +
-  coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
+  theme_minimal()+
+        theme(
+    plot.title = element_text(hjust = 0.2, face = "bold", size = 12),
+    axis.title = element_text(face = "bold", size = 12),
+    axis.text = element_text(size = 10),
+    legend.title = element_text(face = "bold"),
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray80")
+  )
 ```
 This violin plot shows the distribution of average glucose levels across four groups categorized by stroke status and hypertension. The group with neither hypertension nor stroke has the lowest median (90.4 mg/dL) and mean (101.8 mg/dL) glucose levels, both below the prediabetes threshold of 100 mg/dL. In contrast, the groups with hypertension (with or without stroke) exhibit significantly higher glucose levels. The group with both hypertension and stroke has the highest mean (145.9 mg/dL) and median (132.7 mg/dL), surpassing the diabetes threshold of 126 mg/dL. The data suggests that hypertension and stroke are associated with elevated glucose levels, with a clear increase in glucose levels as health conditions worsen.
 
 #### Avg. Glucose levels with heart disease/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_hd= stroke_data %>% group_by(heart_disease,stroke) %>% summarise(mean_glucose_level = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_hd)
 ```
@@ -1059,53 +889,7 @@ pander(data_sub_glu_hd)
 We can observe that individuals with neither heart disease nor stroke have a mean glucose level of 102.85 mg/dL, which is below the prediabetes threshold. Those without heart disease but with a stroke have a higher mean glucose level of 127.26 mg/dL, approaching the diabetes threshold. For individuals with heart disease but no stroke, the mean glucose level is 129.46 mg/dL, exceeding the diabetes threshold. The highest glucose level, 165.46 mg/dL, is observed in individuals with both heart disease and stroke, indicating a strong association between these conditions and elevated glucose levels.
 
 
-```{r}
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(heart_disease) %>%
-  summarise(
-    mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
-    median_glucose = median(avg_glucose_level, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the plot
-ggplot(stroke_data, aes(x = factor(heart_disease), y = avg_glucose_level, fill = factor(heart_disease))) +
-  geom_boxplot(width = 0.5, outlier.shape = 21, outlier.fill = "white", alpha = 0.7) +
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkgreen", size = 0.5) +
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
-                    labels = c("0" = "No Heart Disease", "1" = "Heart Disease")) +
-  scale_x_discrete(labels = c("0" = "No Heart Disease", "1" = "Heart Disease")) +
-  geom_text(data = summary_stats, aes(x = factor(heart_disease), y = mean_glucose, 
-                                      label = paste("Mean:", round(mean_glucose, 1))),
-            position = position_dodge(width = 0.75), vjust = -1, color = "red", size = 3) +
-  geom_text(data = summary_stats, aes(x = factor(heart_disease), y = median_glucose, 
-                                      label = paste("Median:", round(median_glucose, 1))),
-            position = position_dodge(width = 0.75), vjust = 2, color = "blue", size = 3) +
-  labs(
-    title = "Distribution of Average Glucose Levels by Heart Disease Status",
-    subtitle = "With mean, median, and clinical thresholds indicated",
-    x = "Heart Disease Status",
-    y = "Average Glucose Level (mg/dL)",
-    fill = "Heart Disease Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 14),
-    plot.subtitle = element_text(face = "italic", size = 10),
-    axis.title = element_text(face = "bold"),
-    legend.position = "none",
-    axis.text.x = element_text(face = "bold", size = 12)
-  ) +
-  annotate("text", x = 0.7, y = 100, label = "Prediabetes", color = "darkgreen", hjust = 0, size = 3) +
-  annotate("text", x = 0.7, y = 126, label = "Diabetes", color = "darkgreen", hjust = 0, size = 3) +
-  coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
-```
-From the boxplot, we can see that for individuals without heart disease, the median glucose level is 91 mg/dL, which is below the prediabetes threshold, while the mean is slightly higher at 103.7 mg/dL, just above the prediabetes threshold. In contrast, individuals with heart disease have a significantly higher mean glucose level of 135.4 mg/dL, well above the diabetes threshold, with a median of 106.4 mg/dL.
-
-
-```{r}
-# Calculate mean and median glucose levels for each group
+```{r, warning=FALSE}
 summary_stats <- stroke_data %>%
   group_by(stroke, heart_disease) %>%
   summarise(
@@ -1133,18 +917,12 @@ ggplot(stroke_data, aes(x = interaction(stroke, heart_disease), y = avg_glucose_
                               "Stroke\nNo Heart Disease", 
                               "Stroke\nHeart Disease")) +
   
-  # Add clinical threshold lines
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkred", size = 0.5) +
-  
-  # Add mean and median glucose levels
   geom_text(data = summary_stats, aes(x = interaction(stroke, heart_disease), y = mean_glucose, 
                                       label = paste("Mean:", round(mean_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = -0.5, color = "red", size = 3) +
   geom_text(data = summary_stats, aes(x = interaction(stroke, heart_disease), y = median_glucose, 
                                       label = paste("Median:", round(median_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = 1.5, color = "blue", size = 3) +
-  
-  # Labels for the plot
   labs(
     title = "Distribution of Average Glucose Levels by Stroke Status and Heart Disease",
     subtitle = "Violin plot with embedded box plot, mean, median, and clinical thresholds",
@@ -1152,30 +930,22 @@ ggplot(stroke_data, aes(x = interaction(stroke, heart_disease), y = avg_glucose_
     y = "Average Glucose Level (mg/dL)",
     fill = "Group"
   ) +
-  
-  # Customize the theme
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 14),
+    plot.title = element_text(face = "bold", size = 12),
     plot.subtitle = element_text(face = "italic", size = 10),
     axis.title = element_text(face = "bold"),
     legend.position = "top",
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid.major.x = element_blank()
   ) +
-  
-  # Annotate clinical thresholds
-  annotate("text", x = 0.7, y = c(100, 126), label = c("Prediabetes", "Diabetes"),
-           hjust = 0, vjust = -0.5, color = "darkred", size = 3) +
-  
-  # Adjust y-axis limits
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 ```
 From this violin plot we can see that, individuals without heart disease or stroke have the lowest mean glucose level at 102.8 mg/dL, which is just above the prediabetes threshold, and a median of 90.8 mg/dL, below the prediabetes threshold. The group with heart disease but no stroke has a higher mean glucose level of 127.3 mg/dL, approaching the diabetes threshold, and a median of 101 mg/dL. Individuals without heart disease but with a stroke have a mean glucose level of 129.5 mg/dL, exceeding the diabetes threshold, with a median of 101.6 mg/dL. Finally, the group with both heart disease and stroke shows the highest mean glucose level at 165.5 mg/dL and a median of 193.4 mg/dL, far exceeding the diabetes threshold.
 
 #### Avg. Glucose levels with ever married/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_em= stroke_data %>% group_by(ever_married,stroke) %>% summarise(mean = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_em)
 ```
@@ -1191,71 +961,7 @@ Based on the table:
 
 This suggests that both marital status and stroke occurrence are associated with elevated glucose levels, with married individuals, especially those who have had a stroke, showing the highest average glucose levels.
 
-```{r}
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(ever_married) %>%
-  summarise(
-    mean_glucose = mean(avg_glucose_level, na.rm = TRUE),
-    median_glucose = median(avg_glucose_level, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the plot
-ggplot(stroke_data, aes(x = ever_married, y = avg_glucose_level, fill = ever_married)) + 
-  geom_boxplot(width = 0.5, alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
-  geom_hline(yintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
-  
-  # Set the correct fill colors
-  scale_fill_manual(values = c("No" = "skyblue", "Yes" = "lightgreen"),
-                    labels = c("Never Married", "Ever Married")) +
-  
-  # Adjust y-axis scale
-  scale_y_continuous(breaks = seq(0, 300, by = 50)) +
-  
-  # Add labels for the plot
-  labs(
-    title = "Distribution of Average Glucose Levels by Marital Status",
-    subtitle = "With mean, median, and clinical thresholds indicated",
-    x = "Marital Status",
-    y = "Average Glucose Level (mg/dL)",
-    fill = "Marital Status"
-  ) +
-  
-  # Customize the theme
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "none",
-    panel.grid.major.x = element_blank()
-  ) +
-  
-  # Add mean and median glucose text labels
-  geom_text(data = summary_stats, aes(x = ever_married, y = mean_glucose, 
-                                      label = paste("Mean:", round(mean_glucose, 1))),
-            color = "red", vjust = -1, size = 3.5, fontface = "bold") +
-  geom_text(data = summary_stats, aes(x = ever_married, y = median_glucose, 
-                                      label = paste("Median:", round(median_glucose, 1))),
-            color = "blue", vjust = 2, size = 3.5, fontface = "bold") +
-  
-  # Annotate with clinical thresholds
-  annotate("text", x = 1.5, y = c(100, 126), 
-           label = c("Prediabetes Threshold (100 mg/dL)", "Diabetes Threshold (126 mg/dL)"),
-           hjust = 0, vjust = -0.5, color = "darkgreen", size = 3.5, fontface = "italic") +
-  
-  # Adjust y-axis limits
-  coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
-
-```
-We can see that Individuals who are not married have a mean glucose level of 96.1 mg/dL, which is just below the prediabetes threshold of 100 mg/dL, and a median of 89.1 mg/dL, indicating that most individuals in this group have glucose levels in the normal range.
-For those who are ever married, the mean glucose level is 110.2 mg/dL, which exceeds the prediabetes threshold but is still below the diabetes threshold. The median is 93.2 mg/dL.
-
-
-
-```{r}
+```{r, warning=FALSE}
 # Calculate mean and median glucose levels for each group
 summary_stats <- stroke_data %>%
   group_by(ever_married, stroke) %>%
@@ -1265,11 +971,9 @@ summary_stats <- stroke_data %>%
     .groups = "drop"
   )
 
-# Create the plot
 ggplot(stroke_data, aes(x = interaction(stroke, ever_married), y = avg_glucose_level, fill = interaction(stroke, ever_married))) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  # Adjust the fill scale to match the exact interaction levels
   scale_fill_manual(values = c("0.No" = "skyblue", 
                                "0.Yes" = "lightgreen",
                                "1.No" = "darkblue", 
@@ -1278,25 +982,18 @@ ggplot(stroke_data, aes(x = interaction(stroke, ever_married), y = avg_glucose_l
                                "Ever Married, No Stroke", 
                                "Never Married, Stroke", 
                                "Ever Married, Stroke")) +
-  
-  # Adjust the x-axis labels to match
+
   scale_x_discrete(labels = c("Never Married\nNo Stroke", 
                               "Ever Married\nNo Stroke", 
                               "Never Married\nStroke", 
                               "Ever Married\nStroke")) +
-  
-  # Add horizontal lines for clinical thresholds
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkred", size = 0.5) +
-  
-  # Add text for mean and median glucose levels
   geom_text(data = summary_stats, aes(x = interaction(stroke, ever_married), y = mean_glucose, 
                                       label = paste("Mean:", round(mean_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = -0.5, color = "red", size = 3) +
   geom_text(data = summary_stats, aes(x = interaction(stroke, ever_married), y = median_glucose, 
                                       label = paste("Median:", round(median_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = 1.5, color = "blue", size = 3) +
-  
-  # Add labels and titles
+
   labs(
     title = "Distribution of Average Glucose Levels by Stroke Status and Marital Status",
     subtitle = "Violin plot with embedded box plot, mean, median, and clinical thresholds",
@@ -1304,8 +1001,6 @@ ggplot(stroke_data, aes(x = interaction(stroke, ever_married), y = avg_glucose_l
     y = "Average Glucose Level (mg/dL)",
     fill = "Group"
   ) +
-  
-  # Customize the theme
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", size = 14),
@@ -1315,12 +1010,7 @@ ggplot(stroke_data, aes(x = interaction(stroke, ever_married), y = avg_glucose_l
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid.major.x = element_blank()
   ) +
-  
-  # Annotate with clinical labels
-  annotate("text", x = 0.1, y = c(100, 126), label = c("Prediabetes", "Diabetes"),
-           hjust = 0, vjust = -0.5, color = "darkred", size = 3) +
-  
-  # Set y-axis limits
+
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 ```
 1. Never married, no stroke individuals have a mean glucose level of 95.9 mg/dL, just below the prediabetes threshold, and a median of 89.10 mg/dL, suggesting relatively normal glucose levels.
@@ -1335,7 +1025,7 @@ Those who have experienced a stroke, regardless of marital status, tend to have 
 
 #### Avg. Glucose levels with work type/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_wt= stroke_data %>% group_by(work_type,stroke) %>% summarise(mean = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_wt)
 ```
@@ -1351,7 +1041,7 @@ pander(data_sub_glu_wt)
 
 This data suggests that individuals in government jobs, the private sector, and self-employed groups with a stroke tend to have the highest glucose levels.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(work_type) %>%
@@ -1363,7 +1053,6 @@ summary_stats <- stroke_data %>%
 
 ggplot(stroke_data, aes(x = work_type, y = avg_glucose_level, fill = work_type)) + 
   geom_boxplot(width = 0.7, alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
-  geom_hline(yintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
   scale_fill_brewer(palette = "Set3") +
   scale_y_continuous(breaks = seq(0, 300, by = 50)) +
   labs(
@@ -1375,7 +1064,7 @@ ggplot(stroke_data, aes(x = work_type, y = avg_glucose_level, fill = work_type))
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1389,9 +1078,6 @@ ggplot(stroke_data, aes(x = work_type, y = avg_glucose_level, fill = work_type))
   geom_text(data = summary_stats, aes(x = work_type, y = median_glucose, 
                                      label = paste("Median:", round(median_glucose, 1))),
             color = "blue", vjust = 1.5, size = 3, fontface = "bold") +
-  annotate("text", x = 1, y = c(100, 126), 
-           label = c("Prediabetes Threshold (100 mg/dL)", "Diabetes Threshold (126 mg/dL)"),
-           hjust = 0, vjust = -0.5, color = "darkgreen", size = 3, fontface = "italic") +
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 ```
 From this plot, we can observe that:
@@ -1406,7 +1092,7 @@ The self-employed and government job workers show elevated glucose levels compar
 
 #### Avg. Glucose levels with resident type/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_rt= stroke_data %>% group_by(Residence_type,stroke) %>% summarise(mean = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_rt)
 ```
@@ -1415,7 +1101,7 @@ This tells us that in rural areas, individuals without a stroke have a mean gluc
 
 For urban residents, those without a stroke have a mean glucose level of 103.53 mg/dL, similar to rural residents without a stroke. However, urban individuals with a stroke exhibit the highest mean glucose levels at 136.46 mg/dL.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(Residence_type) %>%
@@ -1427,7 +1113,6 @@ summary_stats <- stroke_data %>%
 
 ggplot(stroke_data, aes(x = Residence_type, y = avg_glucose_level, fill = Residence_type)) + 
   geom_boxplot(width = 0.7, alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
-  geom_hline(yintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
   scale_fill_manual(values = c("Rural" = "forestgreen", "Urban" = "orange")) +
   scale_y_continuous(breaks = seq(0, 300, by = 50)) +
   labs(
@@ -1439,7 +1124,7 @@ ggplot(stroke_data, aes(x = Residence_type, y = avg_glucose_level, fill = Reside
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1452,9 +1137,6 @@ ggplot(stroke_data, aes(x = Residence_type, y = avg_glucose_level, fill = Reside
   geom_text(data = summary_stats, aes(x = Residence_type, y = median_glucose, 
                                      label = paste("Median:", round(median_glucose, 1))),
             color = "blue", vjust = 2, size = 3.5, fontface = "bold") +
-  annotate("text", x = 0.5, y = c(100, 126), 
-           label = c("Prediabetes Threshold (100 mg/dL)", "Diabetes Threshold (126 mg/dL)"),
-           hjust = 0, vjust = -0.5, color = "darkgreen", size = 3.5, fontface = "italic") +
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 ```
 For rural residents, the mean glucose level is 105.6 mg/dL, slightly above the prediabetes threshold, while the median is 92.8 mg/dL, suggesting that the majority of individuals in this group have normal glucose levels, but some outliers raise the mean.
@@ -1462,8 +1144,7 @@ For rural residents, the mean glucose level is 105.6 mg/dL, slightly above the p
 For urban residents, the mean glucose level is 105 mg/dL, very similar to the rural group, and also above the prediabetes threshold. The median glucose level is 90.6 mg/dL, which is slightly lower than the rural group's median.
 
 
-```{r}
-# Calculate mean and median glucose levels for each group
+```{r, warning=FALSE}
 summary_stats <- stroke_data %>%
   group_by(Residence_type, stroke) %>%
   summarise(
@@ -1472,8 +1153,6 @@ summary_stats <- stroke_data %>%
     .groups = "drop"
   )
 
-# Create the plot
-# Adjust the fill scale to match the exact interaction levels
 ggplot(stroke_data, aes(x = interaction(stroke, Residence_type), y = avg_glucose_level, fill = interaction(stroke, Residence_type))) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
@@ -1485,7 +1164,6 @@ ggplot(stroke_data, aes(x = interaction(stroke, Residence_type), y = avg_glucose
                                "Rural, Stroke", "Urban, Stroke")) +
   scale_x_discrete(labels = c("Rural\nNo Stroke", "Urban\nNo Stroke", 
                               "Rural\nStroke", "Urban\nStroke")) +
-  geom_hline(yintercept = c(100, 126), linetype = "dashed", color = "darkred", size = 0.5) +
   geom_text(data = summary_stats, aes(x = interaction(stroke, Residence_type), y = mean_glucose, 
                                       label = paste("Mean:", round(mean_glucose, 1))),
             position = position_dodge(width = 0.75), vjust = -0.5, color = "red", size = 3) +
@@ -1508,8 +1186,6 @@ ggplot(stroke_data, aes(x = interaction(stroke, Residence_type), y = avg_glucose
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.grid.major.x = element_blank()
   ) +
-  annotate("text", x = 0.7, y = c(100, 126), label = c("Prediabetes", "Diabetes"),
-           hjust = 0, vjust = -0.5, color = "darkred", size = 3) +
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 
 
@@ -1520,7 +1196,7 @@ Among those with a stroke, rural residents have a mean glucose level of 103.5 mg
 
 #### Avg. Glucose levels with smoking status/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_glu_st= stroke_data %>% group_by(smoking_status,stroke) %>% summarise(mean = mean(avg_glucose_level),.groups = "drop")
 pander(data_sub_glu_st)
 ```
@@ -1528,7 +1204,7 @@ We can see that across all groups, individuals who have had a stroke tend to hav
 
 
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(smoking_status) %>%
@@ -1540,7 +1216,6 @@ summary_stats <- stroke_data %>%
 
 ggplot(stroke_data, aes(x = smoking_status, y = avg_glucose_level, fill = smoking_status)) + 
   geom_boxplot(width = 0.7, alpha = 0.7, outlier.shape = 21, outlier.fill = "white") +
-  geom_hline(yintercept = c(100, 126), color = "darkgreen", linetype = "longdash", size = 0.5) +
   scale_fill_brewer(palette = "Set2") +
   scale_y_continuous(breaks = seq(0, 300, by = 50)) +
   labs(
@@ -1552,7 +1227,7 @@ ggplot(stroke_data, aes(x = smoking_status, y = avg_glucose_level, fill = smokin
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1566,9 +1241,6 @@ ggplot(stroke_data, aes(x = smoking_status, y = avg_glucose_level, fill = smokin
   geom_text(data = summary_stats, aes(x = smoking_status, y = median_glucose, 
                                      label = paste("Median:", round(median_glucose, 1))),
             color = "blue", vjust = 1.5, size = 3, fontface = "bold") +
-  annotate("text", x = 1, y = c(100, 126), 
-           label = c("Prediabetes Threshold (100 mg/dL)", "Diabetes Threshold (126 mg/dL)"),
-           hjust = 0, vjust = -0.5, color = "darkgreen", size = 3, fontface = "italic") +
   coord_cartesian(ylim = c(50, max(stroke_data$avg_glucose_level, na.rm = TRUE) * 1.05))
 ```
 
@@ -1585,7 +1257,7 @@ Individuals with an "unknown" smoking status have a mean glucose level of 98.3 m
 ### Age
 The last variable that we consider is age. 
 
-```{r}
+```{r, warning=FALSE}
 summary(stroke_data$age)
 ```
 
@@ -1599,11 +1271,11 @@ We can see that
 
 This distribution suggests that the age variable is fairly spread out, with a slight skew towards younger ages. The majority of individuals are between 25 and 61 years old.
 
-```{r,include=FALSE}
+```{r, warning=FALSE,include=FALSE}
 a = hist(stroke_data$age)
 ```
 
-```{r}
+```{r, warning=FALSE}
 # Calculate frequency statistics for age
 cat("More Statistics for Age:\n")
 age_stats = agricolae::stat.freq(a)
@@ -1616,7 +1288,7 @@ The most frequently occurring age is around 53 years. The skewness is -0.120, wh
 
 
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 age_stats <- stroke_data %>%
   summarise(
@@ -1655,7 +1327,7 @@ ggplot(stroke_data, aes(x = age)) +
   # Theme customization
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1668,7 +1340,7 @@ ggplot(stroke_data, aes(x = age)) +
 
 This density plot confirms our findings from earlier tables.This plot shows multiple peaks, with significant frequencies at various points such as early childhood (around 0-5 years) and older age groups (around 70-80 years). This multimodal characteristic is not typical of a normal distribution, which should be unimodal and bell-shaped. In addition, it has asymmetry, particularly with a longer tail on the right and The dispersion appears broader than what we would expect in a normal distribution, with a wide range of ages and a higher frequency in the older age groups.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 age_stats <- stroke_data %>%
   summarise(
@@ -1681,7 +1353,6 @@ age_stats <- stroke_data %>%
 # Create the boxplot
 ggplot(stroke_data, aes(x = "Age", y = age)) +
   geom_boxplot(fill = "lightblue", color = "darkblue", alpha = 0.7, width = 0.5) +
-  geom_jitter(width = 0.2, alpha = 0.1, color = "darkgrey") +
   stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "white") +
   geom_text(data = age_stats, aes(x = "Age", y = mean_age, label = paste("Mean:", round(mean_age, 1))),
             color = "red", vjust = -1, hjust = -0.1, size = 3.5) +
@@ -1693,13 +1364,13 @@ ggplot(stroke_data, aes(x = "Age", y = age)) +
             color = "darkgreen", vjust = -0.5, hjust = -0.1, size = 3.5) +
   labs(
     title = "Distribution of Age",
-    subtitle = "Boxplot with jittered points and summary statistics",
+    subtitle = "Boxplot and summary statistics",
     y = "Age (years)",
     x = NULL
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title.y = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1711,7 +1382,7 @@ ggplot(stroke_data, aes(x = "Age", y = age)) +
 ```
 As expected, The boxplot shows moderate spread in the data, with a few potential outliers on both sides of the whiskers. This confirms a wide age distribution, with a slight skew to the left.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 age_stats <- stroke_data %>%
   summarise(
@@ -1732,7 +1403,7 @@ ggplot(stroke_data, aes(sample = age)) +
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10)
@@ -1748,13 +1419,13 @@ From the Q-Q plot we can see that there are deviations at the tails with standar
 
 #### Age levels with Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_age= stroke_data %>% group_by(stroke) %>% summarise(Age_mean = mean(age),.groups = "drop")
 pander(data_sub_age)
 ```
 For those who have not had a stroke, the mean age is 41.8 years, indicating that the population without stroke tends to be younger. In contrast, individuals who have experienced a stroke are significantly older, with a mean age of 67.7 years. This data suggests that stroke occurrence is more common among older individuals, while younger people are less likely to have had a stroke.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(stroke) %>%
@@ -1768,18 +1439,17 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = as.factor(stroke), y = age, fill = as.factor(stroke))) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon")) +
   labs(
     title = "Age Distribution by Stroke Occurrence",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Stroke Status",
     y = "Age (years)",
     fill = "Stroke Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1808,7 +1478,7 @@ pander(data_sub_age)
 For those without heart disease and no stroke, the mean age is 40.6 years, whereas for those with no heart disease but with a stroke, the mean age is significantly higher at 66.7 years. Among individuals with heart disease, those without a stroke have a mean age of 67.6 years, while those with both heart disease and stroke have the highest mean age of 72 years. This suggests that both heart disease and stroke are more prevalent among older individuals.
 
 
-```{r}
+```{r, warning=FALSE}
 # Define labels for heart disease
 heart_disease_labels <- c("0" = "No Heart Disease", "1" = "Heart Disease")
 
@@ -1825,20 +1495,19 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = heart_disease, y = age, fill = heart_disease)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"), 
                     labels = heart_disease_labels) +
   scale_x_discrete(labels = heart_disease_labels) +
   labs(
     title = "Age Distribution by Heart Disease Status",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Heart Disease Status",
     y = "Age (years)",
     fill = "Heart Disease Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1857,50 +1526,6 @@ ggplot(stroke_data, aes(x = heart_disease, y = age, fill = heart_disease)) +
 
 For those without heart disease, the mean age is 41.5 years, and the median is 43 years, with a broader spread of ages. In contrast, individuals with heart disease have a much higher mean age of 68.3 years and a median of 71 years, with a tighter distribution around the higher age range. The plot highlights that heart disease is more prevalent among older individuals, with a visible difference in the central tendency between the two groups.
 
-```{r}
-# Define labels for stroke and heart disease
-stroke_labels <- c("0" = "No Stroke", "1" = "Stroke")
-heart_disease_labels <- c("0" = "No Heart Disease", "1" = "Heart Disease")
-
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(heart_disease, stroke) %>%
-  summarise(
-    mean_age = mean(age, na.rm = TRUE),
-    median_age = median(age, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the boxplot
-ggplot(stroke_data, aes(x = stroke, y = age, fill = stroke)) +
-  geom_boxplot(alpha = 0.7) +
-  geom_jitter(width = 0.2, alpha = 0.1, color = "darkgrey") +
-  facet_wrap(~heart_disease, labeller = as_labeller(heart_disease_labels)) +
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"), labels = stroke_labels) +
-  scale_x_discrete(labels = stroke_labels) +
-  labs(
-    title = "Age Distribution by Stroke Status and Heart Disease",
-    subtitle = "Boxplots with jittered points",
-    x = "Stroke Status",
-    y = "Age (years)",
-    fill = "Stroke Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "bottom",
-    strip.text = element_text(face = "bold", size = 12)
-  ) +
-  geom_text(data = summary_stats, 
-            aes(x = stroke, y = max(stroke_data$age, na.rm = TRUE), 
-                label = paste("Mean:", round(mean_age, 1))),
-            vjust = -0.5, size = 3, fontface = "bold") +
-  coord_cartesian(ylim = c(0, max(stroke_data$age, na.rm = TRUE) * 1.1))
-```
-Individuals without heart disease and no stroke have the lowest mean age (40.6 years), while those with both stroke and heart disease have the highest mean (72 years). There is a clear trend of older age in individuals with stroke, regardless of heart disease status. Additionally, the spread of ages is more significant in the no-stroke group for those without heart disease, indicating greater variability in this population.
 
 #### Age levels with Smoking Status/Stroke
 
@@ -1912,7 +1537,7 @@ We can see that former smokers tend to be older on average, with those who exper
 Interestingly, individuals with an unknown smoking status show a stark difference based on stroke status: those with a stroke are much older (65.6 years) than those without (28.8 years). 
 
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(smoking_status) %>%
@@ -1926,18 +1551,17 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = smoking_status, y = age, fill = smoking_status)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_brewer(palette = "Set3") +
   labs(
     title = "Age Distribution by Smoking Status",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Smoking Status",
     y = "Age (years)",
     fill = "Smoking Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -1958,63 +1582,19 @@ Above indicates that former smokers tend to be the oldest group, with a mean age
 The "unknown" smoking status group stands out with a significantly lower mean age of 29.5 years and a median of 22 years, suggesting that this group consists of much younger individuals compared to the others.
 
 
-```{r}
-# Define labels for stroke
-stroke_labels <- c("0" = "No Stroke", "1" = "Stroke")
-
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(smoking_status, stroke) %>%
-  summarise(
-    mean_age = mean(age, na.rm = TRUE),
-    median_age = median(age, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the comparative boxplot
-ggplot(stroke_data, aes(x = smoking_status, y = age, fill = as.factor(stroke))) +
-  geom_boxplot(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.7) +
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
-                    labels = stroke_labels) +
-  labs(
-    title = "Age Distribution by Smoking Status and Stroke Occurrence",
-    subtitle = "Comparative boxplots with jittered points",
-    x = "Smoking Status",
-    y = "Age (years)",
-    fill = "Stroke Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "top"
-  ) +
-  geom_text(data = summary_stats, 
-            aes(x = smoking_status, y = mean_age, label = round(mean_age, 1), group = stroke),
-            position = position_dodge(width = 0.8),
-            vjust = -0.5, size = 3, fontface = "bold") +
-  coord_cartesian(ylim = c(0, max(stroke_data$age, na.rm = TRUE) * 1.05))
-```
-This comparative boxplot tells us that former smokers who had a stroke tend to be older (mean age of 68.4 years) compared to those who didn't have a stroke (mean age of 54 years). A similar pattern is seen among those who never smoked: individuals who had a stroke are significantly older (70.5 years) than those who did not (45.3 years).
-
-For current smokers, those with a stroke have a mean age of 62.4 years, while those without a stroke are younger (46.1 years). Interestingly, in the "unknown" smoking status group, those who had a stroke are much older (65.6 years) compared to those who did not (28.8 years).
-
 #### Age levels with hypertension/Stroke
 
 ```{r, warning=FALSE}
 #stroke_data <- load_stroke_data()
 data_sub_age_hyp= stroke_data %>% group_by(hypertension,stroke) %>% summarise(Age_mean = mean(age),.groups = "drop")
-print(data_sub_age_hyp)
+pander(data_sub_age_hyp)
 ```
 
 Among individuals without hypertension, those who have not had a stroke are younger, with a mean age of 40 years, while those who have experienced a stroke are significantly older, with a mean age of 67 years. For individuals with hypertension, the pattern is similar: those without a stroke have a mean age of 61.2 years, and those with a stroke are older still, with a mean age of 69.6 years.
 
 The data suggests that both stroke and hypertension are associated with older age, with those having both conditions (hypertension and stroke) being the oldest group. Conversely, individuals without either condition tend to be much younger.
 
-```{r}
+```{r, warning=FALSE}
 # Define labels for hypertension
 hypertension_labels <- c("0" = "No Hypertension", "1" = "Hypertension")
 
@@ -2031,20 +1611,19 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = hypertension, y = age, fill = hypertension)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
                     labels = hypertension_labels) +
   scale_x_discrete(labels = hypertension_labels) +
   labs(
     title = "Age Distribution by Hypertension Status",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Hypertension Status",
     y = "Age (years)",
     fill = "Hypertension Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -2064,7 +1643,7 @@ The plots indicate that individuals without hypertension tend to be younger, wit
 
 In contrast, individuals with hypertension are significantly older, with a mean age of 62.3 years and a median of 63 years. The distribution for this group is more tightly concentrated around the older age range. The stark difference between the two groups suggests that hypertension is more prevalent among older individuals, while younger individuals tend to have no hypertension.
 
-```{r}
+```{r, warning=FALSE}
 # Define labels for hypertension and stroke
 hypertension_labels <- c("0" = "No Hypertension", "1" = "Hypertension")
 stroke_labels <- c("0" = "No Stroke", "1" = "Stroke")
@@ -2081,20 +1660,19 @@ summary_stats <- stroke_data %>%
 # Create the comparative boxplot
 ggplot(stroke_data, aes(x = hypertension, y = age, fill = stroke)) +
   geom_boxplot(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.7) +
-  geom_jitter(position = position_jitterdodge(dodge.width = 0.8), alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
                     labels = stroke_labels) +
   scale_x_discrete(labels = hypertension_labels) +
   labs(
     title = "Age Distribution by Hypertension Status and Stroke Occurrence",
-    subtitle = "Comparative boxplots with jittered points",
+    subtitle = "Comparative boxplots",
     x = "Hypertension Status",
     y = "Age (years)",
     fill = "Stroke Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -2111,14 +1689,14 @@ Among individuals without hypertension, those who have experienced a stroke are 
 For those with hypertension, the trend persists: individuals with a stroke are older, with a mean age of 69.6 years, compared to those without a stroke, who have a mean age of 61.2 years.
 
 #### Age levels with Marital Status/Stroke
-```{r}
+```{r, warning=FALSE}
 data_sub_age_hyp= stroke_data %>% group_by(ever_married,stroke) %>% summarise(Age_mean = mean(age),.groups = "drop")
 pander(data_sub_age_hyp)
 ```
 For individuals who have never been married, those without a stroke are much younger, with a mean age of 21.2 years, while those who have had a stroke are considerably older, with a mean age of 66.5 years. This suggests that stroke is rare among younger, unmarried individuals but more prevalent in older unmarried individuals.
 
 Among those who have been married, the mean age without a stroke is 53.2 years, and it increases to 67.9 years for those who have experienced a stroke. This indicates that married individuals tend to be older on average, and those who suffer from strokes are generally older as well.
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(ever_married) %>%
@@ -2132,20 +1710,18 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = ever_married, y = age, fill = ever_married)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("No" = "skyblue", "Yes" = "salmon"),
                     labels = c("No" = "Never Married", "Yes" = "Ever Married")) +
   scale_x_discrete(labels = c("No" = "Never Married", "Yes" = "Ever Married")) +
   labs(
-    title = "Age Distribution by Marital Status",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Marital Status",
     y = "Age (years)",
     fill = "Marital Status"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -2165,63 +1741,9 @@ The "never married" group is notably younger, with a mean age of 21.8 years and 
 
 On the other hand, the "ever married" group is significantly older, with a mean age of 54.1 years and a median age of 54 years. The distribution for this group is much wider and more evenly spread across the higher age ranges, indicating a broader age spectrum among those who have been married.
 
-```{r}
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(ever_married, stroke) %>%
-  summarise(
-    mean_age = mean(age, na.rm = TRUE),
-    median_age = median(age, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the comparative boxplot
-ggplot(stroke_data, aes(x = ever_married, y = age, fill = stroke)) +
-  geom_boxplot(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.7) +
-  # Correct fill scale mapping with actual factor levels
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "salmon"),
-                    labels = c("No Stroke", "Stroke")) +
-  
-  # Correct x-axis labels
-  scale_x_discrete(labels = c("No" = "Never Married", "Yes" = "Ever Married")) +
-  
-  # Add plot labels
-  labs(
-    title = "Age Distribution by Marital Status and Stroke Occurrence",
-    subtitle = "Comparative boxplots with jittered points",
-    x = "Marital Status",
-    y = "Age (years)",
-    fill = "Stroke Status"
-  ) +
-  
-  # Customize the theme
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "top"
-  ) +
-  
-  # Add text for mean ages
-  geom_text(data = summary_stats, 
-            aes(x = ever_married, y = mean_age, label = round(mean_age, 1), group = stroke),
-            position = position_dodge(width = 0.8),
-            vjust = -0.5, size = 3, fontface = "bold") +
-  
-  # Adjust y-axis limits
-  coord_cartesian(ylim = c(0, max(stroke_data$age, na.rm = TRUE) * 1.05))
-
-```
-For individuals who have never been married, those without a stroke tend to be much younger, with a mean age of 21.2 years. However, those who have had a stroke are significantly older, with a mean age of 66.5 years, indicating that stroke is rare among younger, unmarried individuals but more common in older unmarried people.
-
-Among those who have been married, the pattern is similar but at older ages. Individuals without a stroke have a mean age of 53.2 years, while those who have experienced a stroke are even older, with a mean age of 67.9 years. This suggests that stroke is more common in older married individuals compared to their counterparts without a stroke.
-
-
 #### Age levels with Gender/Stroke
 
-```{r}
+```{r, warning=FALSE}
 data_sub_age_hyp= stroke_data %>% group_by(gender,stroke) %>% summarise(Age_mean = mean(age),.groups = "drop")
 pander(data_sub_age_hyp)
 ```
@@ -2229,7 +1751,7 @@ For females, the mean age of those who have not experienced a stroke is 42.4 yea
 
 For males, a similar pattern is observed. Males without a stroke have a mean age of 40.8 years, whereas males who have experienced a stroke are older, with a mean age of 68.3 years.
 
-```{r}
+```{r, warning=FALSE}
 # Calculate summary statistics
 summary_stats <- stroke_data %>%
   group_by(gender) %>%
@@ -2243,18 +1765,17 @@ summary_stats <- stroke_data %>%
 ggplot(stroke_data, aes(x = gender, y = age, fill = gender)) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_boxplot(width = 0.1, fill = "white", alpha = 0.5) +
-  geom_jitter(width = 0.1, alpha = 0.1, color = "darkgrey") +
   scale_fill_manual(values = c("Male" = "skyblue", "Female" = "pink", "Other" = "purple")) +
   labs(
     title = "Age Distribution by Gender",
-    subtitle = "Violin plot with embedded box plot, mean, median, and jittered points",
+    subtitle = "Violin plot with embedded box plot, mean and median",
     x = "Gender",
     y = "Age (years)",
     fill = "Gender"
   ) +
   theme_minimal() +
   theme(
-    plot.title = element_text(face = "bold", size = 16),
+    plot.title = element_text(face = "bold", size = 14),
     plot.subtitle = element_text(face = "italic", size = 12),
     axis.title = element_text(face = "bold", size = 12),
     axis.text = element_text(size = 10),
@@ -2274,46 +1795,3 @@ For females, the mean age is 43.4 years, and the median is 42 years. The distrib
 
 For males, the mean age is 42 years, and the median is 45 years, showing a similar spread to females but with a slightly different central tendency. The distribution for males also shows a broad spread, with a similar concentration around middle ages.
 
-```{r}
-# Ensure gender and stroke are factors with descriptive labels
-levels(stroke_data$stroke) <- c("No Stroke", "Stroke")
-
-# Calculate summary statistics
-summary_stats <- stroke_data %>%
-  group_by(gender, stroke) %>%
-  summarise(
-    mean_age = mean(age, na.rm = TRUE),
-    median_age = median(age, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create the comparative boxplot
-ggplot(stroke_data, aes(x = gender, y = age, fill = stroke)) +
-  geom_boxplot(position = position_dodge(width = 0.8), width = 0.7, alpha = 0.7) +
-  geom_jitter(position = position_jitterdodge(dodge.width = 0.8), alpha = 0.1, color = "darkgrey") +
-  scale_fill_manual(values = c("No Stroke" = "skyblue", "Stroke" = "salmon")) +
-  labs(
-    title = "Age Distribution by Gender and Stroke Occurrence",
-    subtitle = "Comparative boxplots with jittered points",
-    x = "Gender",
-    y = "Age (years)",
-    fill = "Stroke Status"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16),
-    plot.subtitle = element_text(face = "italic", size = 12),
-    axis.title = element_text(face = "bold", size = 12),
-    axis.text = element_text(size = 10),
-    legend.position = "top"
-  ) +
-  geom_text(data = summary_stats, 
-            aes(x = gender, y = mean_age, label = round(mean_age, 1), group = stroke),
-            position = position_dodge(width = 0.8),
-            vjust = -0.5, size = 3, fontface = "bold") +
-  coord_cartesian(ylim = c(0, max(stroke_data$age, na.rm = TRUE) * 1.05))
-```
-
-Among females, the mean age of those without a stroke is 42.4 years, while females who have experienced a stroke are significantly older, with a mean age of 67.2 years. This demonstrates a clear distinction between younger females who haven't had a stroke and older females who have.
-
-For males, the pattern is similar: males without a stroke have a mean age of 40.8 years, whereas males who have had a stroke are much older, with a mean age of 68.3 years. The trend indicates that stroke occurrence is linked to older age in both genders.
