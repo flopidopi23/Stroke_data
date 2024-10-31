@@ -4,8 +4,8 @@ author: 'Florencia Luque  and Seyed Amirhossein Mosaddad '
 output: pdf_document
 date: "2024-10-18"
 ---
-## Part 2
 
+## Part 2
 
 ```{r message=FALSE, warning=FALSE}
 library(caret)
@@ -16,7 +16,9 @@ library(ROCR)
 library(ConfusionTableR)
 library(dplyr)
 library(pander)
+library(pROC)
 ```
+
 ## Introduction
 
 This dataset is a data obtain from *kaggle* and is used to predict if a pacient will probably get a stroke based on characteristic of them like gender, age, bmi, glucose levels.\
@@ -37,7 +39,6 @@ The data have the follow variables:\
 10) bmi: body mass index
 11) smoking_status: "formerly smoked", "never smoked", "smokes" or "Unknown"
 12) stroke: 1 if the patient had a stroke or 0 if not
-
 
 ```{r warning=FALSE}
 path = "/Users/soroush/Desktop/UC3M/courses/R/minitask1/Stroke_data"
@@ -71,7 +72,6 @@ stroke_data$glucose_category = glucose_categories
 str(stroke_data)
 ```
 
-
 ### Relation between variables
 
 #### Stroke with Gender
@@ -80,7 +80,8 @@ str(stroke_data)
 tab_st_gd = table(stroke_data$stroke,stroke_data$gender)
 chisq.test(tab_st_gd)
 ```
-The *p-value* is larger than 0.05 this mean that there's not evidence of dependency between the variables gender and stroke. 
+
+The *p-value* is larger than 0.05 this mean that there's not evidence of dependency between the variables gender and stroke.
 
 #### Stroke with Hypertension
 
@@ -88,6 +89,7 @@ The *p-value* is larger than 0.05 this mean that there's not evidence of depende
 tab_st_hy = table(stroke_data$stroke,stroke_data$hypertension)
 chisq.test(tab_st_hy)
 ```
+
 The *p-value* is a lot smaller than 0.05. This mean that there's a relation between getting a stroke and hypertension. This is a could be a comprobation of the hypothesis that we established earlier about the existence of a relation between this two variables.
 
 #### Stroke with Heart Disease
@@ -96,8 +98,8 @@ The *p-value* is a lot smaller than 0.05. This mean that there's a relation betw
 tab_st_hd = table(stroke_data$stroke,stroke_data$heart_disease)
 chisq.test(tab_st_hd)
 ```
-The *p-value* is a lot smaller than 0.05. This mean that there's a relation between getting a stroke and heart disease This is a could be a comprobation of the hypothesis that we established earlier about the existence of a relation between this two variables.
 
+The *p-value* is a lot smaller than 0.05. This mean that there's a relation between getting a stroke and heart disease This is a could be a comprobation of the hypothesis that we established earlier about the existence of a relation between this two variables.
 
 #### Stroke with Residence Type
 
@@ -105,6 +107,7 @@ The *p-value* is a lot smaller than 0.05. This mean that there's a relation betw
 tab_st_rt = table(stroke_data$stroke,stroke_data$Residence_type)
 chisq.test(tab_st_rt)
 ```
+
 As we had seen in the graph there´s no evidence to say that there's a relation between the type of residence and getting a stroke.
 
 #### Stroke with Ever Married
@@ -113,7 +116,8 @@ As we had seen in the graph there´s no evidence to say that there's a relation 
 tab_st_em = table(stroke_data$stroke,stroke_data$ever_married)
 chisq.test(tab_st_em)
 ```
-Apparently there's a relation within this two variables. Having a stroke have a relation with have been or had been ever married. 
+
+Apparently there's a relation within this two variables. Having a stroke have a relation with have been or had been ever married.
 
 #### Stroke with Smoking Status
 
@@ -121,8 +125,8 @@ Apparently there's a relation within this two variables. Having a stroke have a 
 tab_st_sk = table(stroke_data$stroke,stroke_data$smoking_status)
 chisq.test(tab_st_sk)
 ```
-The *p-value* is a lot smaller than 0.05 so there's is a relation between the variables. This was something that we *dont know what to write here*
 
+The *p-value* is a lot smaller than 0.05 so there's is a relation between the variables. This was something that we *dont know what to write here*
 
 #### Stroke with Work Type
 
@@ -130,7 +134,8 @@ The *p-value* is a lot smaller than 0.05 so there's is a relation between the va
 tab_st_wt = table(stroke_data$stroke,stroke_data$work_type)
 chisq.test(tab_st_wt)
 ```
-There's a relation between the variables (*p-value*<0.05). This we think was because of the difference between the quantity of people who got a stroke and work independently and the people who work with children because the difference was big between them.
+
+There's a relation between the variables (*p-value*\<0.05). This we think was because of the difference between the quantity of people who got a stroke and work independently and the people who work with children because the difference was big between them.
 
 #### Heart Disease and Hypertension
 
@@ -138,6 +143,7 @@ There's a relation between the variables (*p-value*<0.05). This we think was bec
 tab_hy_hd = table(stroke_data$heart_disease,stroke_data$hypertension)
 chisq.test(tab_hy_hd)
 ```
+
 There's a relation between hypertension and heart disease and both variable are related to stroke. This could be a good indicator that within only one of this variables we could have the same information in the model.
 
 #### Heart Disease and Ever Married
@@ -146,6 +152,7 @@ There's a relation between hypertension and heart disease and both variable are 
 tab_hd_em = table(stroke_data$heart_disease,stroke_data$ever_married)
 chisq.test(tab_hd_em)
 ```
+
 #### Heart Disease and Smoking Status
 
 ```{r,warning=FALSE}
@@ -159,6 +166,7 @@ chisq.test(tab_hd_sk)
 tab_hd_wt = table(stroke_data$heart_disease,stroke_data$work_type)
 chisq.test(tab_hd_wt)
 ```
+
 #### Hypertension and Ever Married
 
 ```{r,warning=FALSE}
@@ -186,25 +194,29 @@ chisq.test(tab_hy_wt)
 t.test(age ~ stroke, data = stroke_data)
 
 ```
+
 As you can see we reject the null hypothesis that said that both group have the same mean and this tell as that this variable could have and impact in the probability of getting a stroke in this case getting older increase your chances.
 
 ### Stroke with Average Glucose Levels
 
-
 ```{r warning=FALSE}
 t.test(avg_glucose_level ~ stroke, data = stroke_data)
 ```
-Also we can say that the difference in means between the groups with a stroke are without is not zero. 
+
+Also we can say that the difference in means between the groups with a stroke are without is not zero.
 
 ### Stroke with BMI
+
 ```{r warning=FALSE}
 t.test(bmi ~ stroke, data = stroke_data)
 ```
-Apparently all the continuous variables could have and impact in the chances or getting a stroke. This variable *bmi* also have a *p-value* less than 0.05 so we can say that the groups have significant different means. 
+
+Apparently all the continuous variables could have and impact in the chances or getting a stroke. This variable *bmi* also have a *p-value* less than 0.05 so we can say that the groups have significant different means.
 
 ## Models
 
-### Logistic Regresion (Flo)
+### Logistic Regresion
+
 ```{r warning=F}
 set.seed(23)
 index_split = createDataPartition(stroke_data$stroke,p=0.8,list=FALSE)
@@ -225,7 +237,6 @@ log_reg_model = glm(stroke~(gender + age + hypertension + heart_disease + ever_m
 summary(log_reg_model)
 ```
 
-
 ```{r warning=FALSE}
 
 fitted.results <- predict(log_reg_model,newdata = test,type='response')
@@ -236,11 +247,12 @@ print(paste('Accuracy',1-misClasificError))
 pander(confusionMatrix(as.factor(test$accu),test$stroke))
 
 ```
+
 ```{r warning=FALSE}
 #pander(confusionMatrix(test$accu,test$stroke))
 ```
-As you can see if we take 0.8 as the threshold we get an accuracy of 0.89 and a sensibility of 0.9.
-We will continue deleting the variable resident type because it's not hace any significance in the model.
+
+As you can see if we take 0.8 as the threshold we get an accuracy of 0.89 and a sensibility of 0.9. We will continue deleting the variable resident type because it's not hace any significance in the model.
 
 ```{r,warning=FALSE}
 class_weight <- ifelse(train$stroke == 1, 25, 1.04)
@@ -255,11 +267,13 @@ print(paste('Accuracy',1-misClasificError))
 
 pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
+
 The AIC was reduce so the model improved just a little.
 
 ```{r warning=FALSE}
 anova(log_reg_model2,log_reg_model)
 ```
+
 As the *p-value* is higher than 0.05 we cannot reject that the simpler model is better. So we are going to deleted the variable gender because i doesn't affect the model.
 
 ```{r,warning=FALSE}
@@ -275,11 +289,12 @@ print(paste('Accuracy',1-misClasificError))
 
 pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
+
 ```{r warning=FALSE}
 anova(log_reg_model3,log_reg_model2)
 ```
-As the *p-value* is higher than 0.05 we cannot reject that the simpler model is better. So we are going to deleted the variable ever married because i doesn't affect the model.
 
+As the *p-value* is higher than 0.05 we cannot reject that the simpler model is better. So we are going to deleted the variable ever married because i doesn't affect the model.
 
 ```{r,warning=FALSE}
 class_weight <- ifelse(train$stroke == 1, 25, 1.04)
@@ -294,30 +309,452 @@ print(paste('Accuracy',1-misClasificError))
 
 pander(confusionMatrix(as.factor(test$accu),test$stroke))
 ```
+
 ```{r warning=FALSE}
 anova(log_reg_model,log_reg_model4)
 ```
-The simpler model is better so as all the variables are significance in the model we will leave it at that. 
+
+The simpler model is better so as all the variables are significance in the model we will leave it at that.
 
 ```{r warning=FALSE}
 
 pander(exp(log_reg_model4$coefficients))
 
 ```
-With the exp of the coefficients we get the odds of getting a stroke. Like the intercept means that if all the other variables are zero you have a 2.1% odds of getting a stroke. As we said in the preliminary analysis if you got hypertension the odd of getting a stroke duplicate. If you got a heart disease you have a 4.5% increase in your odds. 
 
-### VSM (soroush)
+With the exp of the coefficients we get the odds of getting a stroke. Like the intercept means that if all the other variables are zero you have a 2.1% odds of getting a stroke. As we said in the preliminary analysis if you got hypertension the odd of getting a stroke duplicate. If you got a heart disease you have a 4.5% increase in your odds.
+
+### VSM 
+
+```{r}
+# Required libraries
+suppressMessages({
+  library(e1071)
+  library(caret)
+  library(pROC)
+  library(dplyr)
+  library(ggplot2)
+  library(gridExtra)
+})
+
+# Data preprocessing function
+prepare_data <- function(data) {
+  processed_data <- data %>%
+    select(-c(id, cat_weight, glucose_category)) %>%
+    na.omit() %>%
+    mutate(
+      gender = as.factor(gender),
+      hypertension = as.factor(hypertension),
+      heart_disease = as.factor(heart_disease),
+      ever_married = as.factor(ever_married),
+      work_type = as.factor(work_type),
+      Residence_type = as.factor(Residence_type),
+      smoking_status = as.factor(smoking_status),
+      stroke = factor(stroke, levels = c("0", "1"), 
+                     labels = c("No_Stroke", "Stroke")),
+      age = scale(age),
+      avg_glucose_level = scale(avg_glucose_level),
+      bmi = scale(bmi)
+    )
+  return(processed_data)
+}
+
+# Set random seed for reproducibility
+set.seed(23)
+
+# Prepare data
+stroke_data_processed <- prepare_data(stroke_data)
+
+# Split data into training and testing sets (80-20)
+train_index <- createDataPartition(stroke_data_processed$stroke, p = 0.8, list = FALSE)
+train_data <- stroke_data_processed[train_index, ]
+test_data <- stroke_data_processed[-train_index, ]
+
+# Define training control with cross-validation and class weights
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary,
+  sampling = "smote",
+  verboseIter = FALSE
+)
+
+# Define parameter grid for tuning
+svm_grid <- expand.grid(
+  C = c(0.1, 1, 10, 100),
+  sigma = c(0.01, 0.1, 1)
+)
+
+# Train SVM model with tuning
+svm_tune <- suppressWarnings(suppressMessages({
+  train(
+    stroke ~ .,
+    data = train_data,
+    method = "svmRadial",
+    trControl = ctrl,
+    tuneGrid = svm_grid,
+    metric = "ROC",
+    preProcess = c("center", "scale")
+  )
+}))
+
+# Train final model with best parameters
+final_svm <- suppressWarnings({
+  svm(
+    stroke ~ .,
+    data = train_data,
+    kernel = "radial",
+    cost = svm_tune$bestTune$C,
+    gamma = svm_tune$bestTune$sigma,
+    probability = TRUE,
+    class.weights = c("No_Stroke" = 1, "Stroke" = sum(train_data$stroke == "No_Stroke")/sum(train_data$stroke == "Stroke"))
+  )
+})
+
+# Make predictions
+pred_prob <- suppressWarnings(predict(final_svm, test_data, probability = TRUE))
+pred_class <- suppressWarnings(predict(final_svm, test_data))
+
+# Calculate performance metrics
+confusion_matrix <- confusionMatrix(pred_class, test_data$stroke)
+roc_obj <- suppressMessages({
+  roc(as.numeric(test_data$stroke) - 1,
+      attr(predict(final_svm, test_data, probability = TRUE), "probabilities")[,2])
+})
+auc_value <- auc(roc_obj)
+
+# Calculate feature importance using permutation method
+calculate_feature_importance <- function(model, data, target, n_permutations = 10) {
+  baseline_pred <- suppressWarnings(predict(model, data, probability = TRUE))
+  baseline_auc <- suppressMessages({
+    auc(roc(as.numeric(data[[target]]) - 1,
+            attr(baseline_pred, "probabilities")[,2]))
+  })
+  
+  importance <- data.frame(
+    feature = names(data)[names(data) != target],
+    importance = 0
+  )
+  
+  for(feature in importance$feature) {
+    auc_drops <- numeric(n_permutations)
+    for(i in 1:n_permutations) {
+      permuted_data <- data
+      permuted_data[[feature]] <- sample(permuted_data[[feature]])
+      perm_pred <- suppressWarnings(predict(model, permuted_data, probability = TRUE))
+      perm_auc <- suppressMessages({
+        auc(roc(as.numeric(permuted_data[[target]]) - 1,
+                attr(perm_pred, "probabilities")[,2]))
+      })
+      auc_drops[i] <- baseline_auc - perm_auc
+    }
+    importance$importance[importance$feature == feature] <- mean(auc_drops)
+  }
+  
+  return(importance[order(-importance$importance),])
+}
+
+# Calculate feature importance
+feature_importance <- calculate_feature_importance(final_svm, test_data, "stroke")
+
+# Create visualizations
+roc_plot <- ggroc(roc_obj) +
+  geom_abline(intercept = 1, slope = 1, linetype = "dashed", color = "gray") +
+  theme_minimal() +
+  labs(title = "ROC Curve for SVM Model",
+       subtitle = paste("AUC =", round(auc_value, 3)))
+
+importance_plot <- ggplot(feature_importance, 
+                         aes(x = reorder(feature, importance), y = importance)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Feature Importance (Permutation)",
+       x = "Feature",
+       y = "Importance (AUC drop)")
+
+# Print results
+cat("\nModel Performance:\n")
+print(confusion_matrix)
+cat("\nAUC:", round(auc_value, 4), "\n\n")
+print("Feature Importance:")
+print(feature_importance)
+
+# Save the model and results
+results <- list(
+  model = final_svm,
+  tuning_results = svm_tune$results,
+  best_parameters = svm_tune$bestTune,
+  performance = list(
+    confusion_matrix = confusion_matrix,
+    auc = auc_value
+  ),
+  feature_importance = feature_importance
+)
+
+saveRDS(results, "svm_stroke_prediction_results.rds")
+```
+
+The SVM model for stroke prediction demonstrates good discriminative ability with an AUC of 0.809, despite challenges with class imbalance in the dataset (95.82% non-stroke cases). While the overall accuracy is 68.78%, the model achieves a balanced accuracy of 72.04% with sensitivity of 68.48% and specificity of 75.61%, indicating reasonable performance in identifying both stroke and non-stroke cases. The feature importance analysis reveals that age is overwhelmingly the most significant predictor (0.285 AUC drop), followed distantly by hypertension (0.010), average glucose level (0.003), and BMI (0.001), while other features like residence type, smoking status, and gender show minimal or slightly negative impact. This suggests that the model could potentially be simplified by focusing on the key predictors, particularly age-based risk stratification, while maintaining its effectiveness. The model's strong AUC but relatively low negative predictive value (9.48%) indicates it's better suited for risk stratification rather than definitive diagnosis, and might benefit from additional techniques to improve prediction of actual stroke cases.
+
+```{r}
+# Display plots
+grid.arrange(roc_plot, importance_plot, ncol = 2)
+```
+
+The ROC curve on the left illustrates the model's classification performance in distinguishing stroke cases from non-stroke cases. The curve rises significantly above the diagonal baseline, achieving an AUC of 0.809, which reflects a strong discriminative capability. This AUC score suggests that the model effectively differentiates between stroke and non-stroke conditions.
+
+On the right, the feature importance plot highlights each variable's contribution to the model. Age emerges as the most influential predictor, with an importance score substantially higher than other features. Notably, after age, there’s a marked decline in feature importance: hypertension, average glucose level, and BMI show only minimal positive impact on stroke prediction, while variables such as work type, smoking status, residence type, and gender contribute little to none or even negatively. This stark contrast in feature importance implies that age could serve as a primary indicator for stroke risk, although the modest contributions of certain physiological factors suggest they should still be considered in comprehensive risk assessment.
+
+### XGBoost for classification
+
+```{r}
+# Required libraries
+library(xgboost)
+library(caret)
+library(pROC)
+library(dplyr)
+
+# Function to prepare data for XGBoost
+prepare_data <- function(data) {
+  # Explicit conversion for each feature
+  XGBoost_data <- data %>%
+    mutate(
+      gender = as.numeric(factor(gender)) - 1,
+      hypertension = as.numeric(hypertension) - 1,
+      heart_disease = as.numeric(heart_disease) - 1,
+      ever_married = as.numeric(factor(ever_married)) - 1,
+      work_type = as.numeric(factor(work_type)),
+      Residence_type = as.numeric(factor(Residence_type)) - 1,
+      smoking_status = as.numeric(factor(smoking_status)),
+      stroke = as.numeric(factor(stroke)) - 1
+    )
+  
+  return(XGBoost_data)
+}
+
+# Data cleaning and preparation
+stroke_data_clean <- stroke_data %>%
+  select(-c(id, cat_weight, glucose_category)) %>%
+  na.omit()
+
+# Prepare the data
+stroke_data_xgb <- prepare_data(stroke_data_clean)
+
+# Split the data (80-20)
+set.seed(23)
+train_index <- createDataPartition(stroke_data_xgb$stroke, p = 0.8, list = FALSE)
+train_data <- stroke_data_xgb[train_index, ]
+test_data <- stroke_data_xgb[-train_index, ]
+
+# Define features explicitly
+features <- c("gender", "age", "hypertension", "heart_disease", "ever_married", 
+             "work_type", "Residence_type", "avg_glucose_level", "bmi", "smoking_status")
+
+# Create matrix format
+train_matrix <- as.matrix(train_data[, features])
+test_matrix <- as.matrix(test_data[, features])
+train_label <- train_data$stroke
+test_label <- test_data$stroke
+
+# Create DMatrix objects
+dtrain <- xgb.DMatrix(data = train_matrix, label = train_label)
+dtest <- xgb.DMatrix(data = test_matrix, label = test_label)
+
+# Set XGBoost parameters with class imbalance handling
+pos_weight <- sum(train_label == 0) / sum(train_label == 1)
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = c("auc", "error"),
+  max_depth = 6,
+  eta = 0.1,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 1,
+  scale_pos_weight = pos_weight
+)
+
+# Train the model with early stopping
+xgb_model <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = 100,
+  watchlist = list(train = dtrain, test = dtest),
+  early_stopping_rounds = 10,
+  print_every_n = 10
+)
+
+# Make predictions
+pred_prob <- predict(xgb_model, dtest)
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+# Calculate comprehensive performance metrics
+confusion_matrix <- confusionMatrix(factor(pred_class), factor(test_label))
+roc_curve <- roc(test_label, pred_prob)
+auc_value <- auc(roc_curve)
+
+# Print detailed results
+cat("\nModel Performance Metrics:\n")
+print(confusion_matrix)
+cat("\nAUC:", round(auc_value, 4), "\n")
+```
+
+The XGBoost model shows good predictive capability, achieving an AUC of 0.829, slightly surpassing the SVM model’s AUC of 0.809. This high AUC reflects the model's effectiveness in distinguishing between stroke and non-stroke cases. The model also achieved an accuracy of 82.26% on the test set (95% CI: 79.73% - 84.6%), alongside high sensitivity of 83.71%, but a moderate specificity of 50%, indicating a strong ability to identify stroke cases but some difficulty in excluding non-stroke cases accurately.
+
+During training, the model converged well, reaching optimal performance at the 12th iteration with a test AUC of 0.828, where early stopping helped prevent overfitting. Despite this, a gap remained between the train (0.954) and test (0.828) AUCs, hinting at mild overfitting. The model's ability to correctly identify non-stroke cases is high (positive predictive value of 97.4%), but it faces challenges with stroke case predictions, as shown by a lower negative predictive value of 12.07%. This reflects the difficulties posed by the imbalanced dataset, where 95.72% of cases are non-stroke.
+
+The model’s balanced accuracy of 66.85% and a Kappa score of 0.1348 indicate moderate overall performance once class imbalance is taken into account. Training dynamics reveal rapid improvement from an initial train AUC of 0.884 and test AUC of 0.772 to optimal performance. When comparing models, XGBoost outperformed SVM in both accuracy and AUC, suggesting it may be a more reliable tool for stroke prediction. Nonetheless, the class imbalance remains a challenge.
+
+```{r}
+# Feature importance analysis
+importance_matrix <- xgb.importance(feature_names = features, model = xgb_model)
+print(importance_matrix)
 
 
+```
 
-### XGBoost for classification (soroush)
+Age emerges as the dominant predictor with the highest gain (48.29%), indicating it contributes most to the model's performance, followed by average glucose level (21.27%) and BMI (15.28%). These top three features account for approximately 85% of the model's predictive power. The secondary tier of predictors includes hypertension and smoking status (both around 3.5% gain), while features like gender and heart disease show minimal impact (around 1% gain). Interestingly, the frequency metric shows a different pattern, with average glucose level being used most often in tree decisions (35.34%), followed by BMI (25.67%) and age (16.69%), suggesting that while age has the highest impact per use, glucose levels and BMI are more frequently utilized in making predictions. 
 
+```{r}
+# Visualizations
+par(mfrow = c(1, 2))
+# ROC Curve
+plot(roc_curve, main = "ROC Curve for XGBoost Model")
+# Feature Importance Plot
+xgb.plot.importance(importance_matrix)
+```
 
-### H2O models with autoh2o (Flo)
+The ROC curve on the left demonstrates strong discriminative performance, with the model's curve sharply rising above the diagonal reference line and achieving an AUC of 0.829. This high AUC suggests the model’s solid ability to differentiate between stroke and non-stroke cases.
 
+On the right, the feature importance plot illustrates a clear ranking of predictor variables. Age stands out with the highest importance score (around 0.4 gain), establishing it as the primary driver in stroke risk prediction. This is followed by average glucose level (approximately 0.2 gain) and BMI (around 0.15 gain). After these top three predictors, there’s a marked decrease in importance, as other features—such as hypertension, smoking status, work type, marital status, residence type, gender, and heart disease—each contribute minimally, with importance scores below 0.05.
 
+This hierarchy in feature importance suggests that a streamlined model focusing on age, average glucose level, and BMI might retain most of the predictive power, potentially simplifying the model while maintaining effectiveness.
 
+```{r}
+# Required libraries
+library(xgboost)
+library(caret)
+library(pROC)
+library(dplyr)
 
+# Split data
+set.seed(23)
+train_index <- createDataPartition(stroke_data_xgb$stroke, p = 0.8, list = FALSE)
+train_data <- stroke_data_xgb[train_index, ]
+test_data <- stroke_data_xgb[-train_index, ]
+
+features <- c("gender", "age", "hypertension", "heart_disease", "ever_married", 
+             "work_type", "Residence_type", "avg_glucose_level", "bmi", "smoking_status")
+
+# Function to generate random parameters
+generate_params <- function() {
+  list(
+    nrounds = sample(c(100, 150, 200), 1),
+    max_depth = sample(3:6, 1),
+    eta = runif(1, 0.01, 0.1),
+    gamma = runif(1, 0, 0.3),
+    colsample_bytree = runif(1, 0.6, 1.0),
+    min_child_weight = sample(1:5, 1),
+    subsample = runif(1, 0.6, 1.0)
+  )
+}
+
+# Number of random parameter sets to try
+n_iterations <- 200
+
+# Calculate class weights
+pos_weight <- sum(train_data$stroke == 0) / sum(train_data$stroke == 1)
+
+# Perform random search with cross-validation
+set.seed(23)
+cv_results <- list()
+best_score <- 0
+best_params <- NULL
+
+for (i in 1:n_iterations) {
+  params <- generate_params()
+  
+  # Create DMatrix for current fold
+  dtrain <- xgb.DMatrix(
+    data = as.matrix(train_data[, features]),
+    label = train_data$stroke
+  )
+  
+  # Cross-validation for current parameter set
+  cv <- xgb.cv(
+    params = c(params, 
+              list(objective = "binary:logistic",
+                   eval_metric = "auc",
+                   scale_pos_weight = pos_weight)),
+    data = dtrain,
+    nrounds = params$nrounds,
+    nfold = 5,
+    early_stopping_rounds = 10,
+    verbose = 0
+  )
+  
+  # Extract best score
+  best_iter <- cv$best_iteration
+  mean_auc <- max(cv$evaluation_log$test_auc_mean)
+  sd_auc <- cv$evaluation_log$test_auc_std[which.max(cv$evaluation_log$test_auc_mean)]
+  
+  # Store results
+  cv_results[[i]] <- list(
+    params = params,
+    mean_auc = mean_auc,
+    sd_auc = sd_auc,
+    best_iter = best_iter
+  )
+  
+  # Update best parameters if necessary
+  if (mean_auc > best_score) {
+    best_score <- mean_auc
+    best_params <- params
+    best_params$nrounds <- best_iter
+  }
+}  # Close the for loop
+
+# Train final model with best parameters
+final_model <- xgb.train(
+  params = c(best_params, 
+            list(objective = "binary:logistic",
+                 eval_metric = "auc",
+                 scale_pos_weight = pos_weight)),
+  data = xgb.DMatrix(data = as.matrix(train_data[, features]),
+                     label = train_data$stroke),
+  nrounds = best_params$nrounds
+)
+
+# Evaluate final model
+test_pred <- predict(final_model, as.matrix(test_data[, features]))
+test_roc <- roc(test_data$stroke, test_pred)
+test_auc <- auc(test_roc)
+
+# Print results
+cat("\nBest Parameters:\n")
+print(best_params)
+cat("\nTest AUC:", round(test_auc, 4), "\n")
+```
+
+We can se that this XGBoost implementation demonstrates a more sophisticated approach through systematic hyperparameter tuning using random search cross-validation, resulting in an improved AUC of 0.8398 compared to the first version's 0.8285. This optimization process explored 200 different parameter combinations, ultimately finding optimal settings including 23 rounds of boosting, a tree depth of 3, a learning rate of 0.084, and various other fine-tuned parameters that control model complexity and sampling. The modest 1.1% improvement in performance suggests that while the optimization was successful, we might be approaching the inherent predictive limit of this dataset given the available features. The tuned model's parameters indicate a preference for a relatively conservative approach, balancing model complexity with generalization ability through moderate sampling rates (colsample_bytree = 0.77, subsample = 0.688) and controlled tree growth (max_depth = 3), which helps prevent overfitting while maintaining predictive performance.
+
+```{r}
+# Feature importance
+importance_matrix <- xgb.importance(feature_names = features, model = final_model)
+print(importance_matrix)
+```
+
+```{r}
+# Plot ROC curve and feature importance
+par(mfrow = c(1, 2))
+plot(test_roc, main = "ROC Curve - Hyperparameter Tuning")
+xgb.plot.importance(importance_matrix)
+```
+
+This hyperparameter-tuned model demonstrates notable shifts in feature importance while achieving a slightly improved AUC of 0.8398 (compared to 0.8285). Age has become an even more dominant predictor, increasing from 48% to 56% gain, while both average glucose level and BMI showed decreased importance (dropping to 16% and 9% respectively, from their previous 21% and 15%). This redistribution of feature importance suggests that the optimized model has found a more efficient way to utilize age as the primary predictor, while also giving slightly more weight to previously underutilized features like hypertension (increasing to 8%). These changes, resulting from the systematic hyperparameter tuning process, indicate a more refined model that better leverages the predictive power of each feature, particularly emphasizing the crucial role of age in stroke prediction.
+
+### H2O models with autoh2o
 
 Split the data to get a 80% for training and 20% for testing.#flo
 
@@ -333,9 +770,11 @@ lb <- aml@leaderboard
 print(lb, n = nrow(lb),extra_columns="ALL")
 
 ```
+
 We are going to take as a initial point to create models the best 3 algorithm. In this case we will be comparing the Grading bosting machine, Generalized linear models and the eXtremely Randomized Trees.
 
 #### Gradieng Bosting Machine
+
 ```{r warning=FALSE}
 gbm_model = h2o.gbm(x = predictor,y = "stroke",training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,seed = 23)
 
@@ -350,7 +789,6 @@ print(gbm_perform)
 ```
 
 #### Generalized Linear Models
-
 
 ```{r warning=FALSE}
 glm_model = h2o.glm(x = predictor, y = "stroke", training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,family = "binomial",seed = 23)
@@ -372,15 +810,18 @@ This model is a type of random Forest who takes as many trees as predictors you 
 xrt_model = h2o.randomForest(x = predictor, y = "stroke",training_frame = train_h2o,keep_cross_validation_predictions = TRUE,nfolds = 10,mtries = length(predictor),seed = 23)
 
 ```
+
 The performance of this model is the follow.
 
 ```{r}
 xrt_perform = h2o.performance(xrt_model,newdata = test_h2o)
 print(xrt_perform)
 ```
+
 When comparing the three models, we observe that each achieves high accuracy, above 80% on the test data. However, considering the variable we aim to predict—the probability of having a stroke—we want to minimize the number of high-risk individuals predicted as low-risk. This means reducing false negatives. The model that best achieves this is the GLM, which still maintains a high accuracy of 0.874.
 
 #### Ensemble model
+
 We will create an ensemble model with the 3 models that we just created.
 
 ```{r warning=FALSE}
@@ -388,11 +829,13 @@ base_models=list(gbm_model@model_id,xrt_model@model_id,glm_model@model_id)
 
 ensemble_model=h2o.stackedEnsemble(x=predictor,y="stroke", training_frame=train_h2o, base_models=base_models)
 ```
+
 Now we can check the perfomance of the new model.
+
 ```{r warning=FALSE}
 perf_ensemble=h2o.performance(ensemble_model,newdata=test_h2o)
 print(perf_ensemble)
 
 ```
-The ensemble model increased accuracy by 1%, reaching a value of 88%. False positives were also reduced, so overall, the ensemble model improved performance and is better suited for the data
 
+The ensemble model increased accuracy by 1%, reaching a value of 88%. False positives were also reduced, so overall, the ensemble model improved performance and is better suited for the data.
