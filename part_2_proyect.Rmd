@@ -328,7 +328,7 @@ pander(exp(log_reg_model4$coefficients))
 
 With the exp of the coefficients we get the odds of getting a stroke. Like the intercept means that if all the other variables are zero you have a 2.1% odds of getting a stroke. As we said in the preliminary analysis if you got hypertension the odd of getting a stroke duplicate. If you got a heart disease you have a 4.5% increase in your odds.
 
-### VSM 
+### VSM
 
 ```{r warning=FALSE}
 
@@ -823,3 +823,17 @@ print(perf_ensemble)
 ```
 
 The ensemble model increased accuracy by 1%, reaching a value of 88%. False positives were also reduced, so overall, the ensemble model improved performance and is better suited for the data.
+
+## Conclusion
+
+Among the various models tested, the ensemble approach demonstrated superior performance with an AUC of 0.884, followed closely by the Gradient Boosting Machine (0.878) and Generalized Linear Model (0.874), with the eXtremely Randomized Trees model achieving an AUC of 0.840. The hyperparameter-tuned XGBoost showed competitive performance with a similar AUC of 0.840. However, all models faced challenges with class imbalance, given that stroke cases represented only 4.8% of the dataset. Notably, the ensemble approach proved most effective at reducing false negatives, a crucial consideration in stroke risk assessment.
+
+Across all models, age consistently emerged as the dominant predictive factor, accounting for 48-56% of the models' predictive power. Average glucose level and BMI were identified as the next most significant factors, while hypertension and heart disease showed moderate importance. Interestingly, demographic factors such as gender and residence type demonstrated minimal impact on stroke prediction, suggesting that physiological and age-related factors are more reliable indicators of stroke risk.
+
+These findings carry important clinical implications. The models' strong emphasis on age suggests that age-based screening protocols could be particularly effective in identifying at-risk individuals. Additionally, the significant role of modifiable risk factors such as glucose levels and BMI indicates clear intervention points for stroke prevention. The relatively low importance of some traditional risk factors, such as smoking status, warrants further investigation and may suggest a need to reassess certain aspects of conventional stroke risk assessment.
+
+Despite their strong performance, the models exhibited certain limitations. All approaches struggled to some degree with class imbalance handling, and the high sensitivity but lower specificity suggests the models are more reliable at identifying low-risk cases than high-risk ones. The observed gap between training and test performance indicates some degree of overfitting, although various techniques were employed to mitigate this issue.
+
+Based on these findings, several recommendations emerge for practical application. The use of ensemble methods is advised for the most reliable predictions, and screening efforts should particularly focus on older populations. Regular monitoring of modifiable risk factors like glucose levels and BMI could enable early intervention. Future improvements could be achieved by collecting additional features and implementing regular model retraining with new data. However, it's important to note that while these models show promise as valuable tools for preliminary stroke risk screening, they should be used to complement rather than replace clinical judgment.
+
+Future research directions should focus on addressing the current limitations. This could include gathering more data from stroke cases to better balance the dataset, investigating additional predictive features, and developing more sophisticated ensemble approaches.
