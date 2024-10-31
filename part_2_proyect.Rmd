@@ -17,6 +17,10 @@ library(ConfusionTableR)
 library(dplyr)
 library(pander)
 library(pROC)
+library(xgboost)
+library(e1071)
+library(gridExtra)
+library(ggplot2)
 ```
 
 ## Introduction
@@ -326,16 +330,7 @@ With the exp of the coefficients we get the odds of getting a stroke. Like the i
 
 ### VSM 
 
-```{r}
-# Required libraries
-suppressMessages({
-  library(e1071)
-  library(caret)
-  library(pROC)
-  library(dplyr)
-  library(ggplot2)
-  library(gridExtra)
-})
+```{r warning=FALSE}
 
 # Data preprocessing function
 prepare_data <- function(data) {
@@ -498,7 +493,7 @@ saveRDS(results, "svm_stroke_prediction_results.rds")
 
 The SVM model for stroke prediction demonstrates good discriminative ability with an AUC of 0.809, despite challenges with class imbalance in the dataset (95.82% non-stroke cases). While the overall accuracy is 68.78%, the model achieves a balanced accuracy of 72.04% with sensitivity of 68.48% and specificity of 75.61%, indicating reasonable performance in identifying both stroke and non-stroke cases. The feature importance analysis reveals that age is overwhelmingly the most significant predictor (0.285 AUC drop), followed distantly by hypertension (0.010), average glucose level (0.003), and BMI (0.001), while other features like residence type, smoking status, and gender show minimal or slightly negative impact. This suggests that the model could potentially be simplified by focusing on the key predictors, particularly age-based risk stratification, while maintaining its effectiveness. The model's strong AUC but relatively low negative predictive value (9.48%) indicates it's better suited for risk stratification rather than definitive diagnosis, and might benefit from additional techniques to improve prediction of actual stroke cases.
 
-```{r}
+```{r warning=FALSE}
 # Display plots
 grid.arrange(roc_plot, importance_plot, ncol = 2)
 ```
@@ -509,13 +504,7 @@ On the right, the feature importance plot highlights each variable's contributio
 
 ### XGBoost for classification
 
-```{r}
-# Required libraries
-library(xgboost)
-library(caret)
-library(pROC)
-library(dplyr)
-
+```{r warning=FALSE}
 # Function to prepare data for XGBoost
 prepare_data <- function(data) {
   # Explicit conversion for each feature
@@ -606,7 +595,7 @@ During training, the model converged well, reaching optimal performance at the 1
 
 The model’s balanced accuracy of 66.85% and a Kappa score of 0.1348 indicate moderate overall performance once class imbalance is taken into account. Training dynamics reveal rapid improvement from an initial train AUC of 0.884 and test AUC of 0.772 to optimal performance. When comparing models, XGBoost outperformed SVM in both accuracy and AUC, suggesting it may be a more reliable tool for stroke prediction. Nonetheless, the class imbalance remains a challenge.
 
-```{r}
+```{r warning=FALSE}
 # Feature importance analysis
 importance_matrix <- xgb.importance(feature_names = features, model = xgb_model)
 print(importance_matrix)
@@ -616,7 +605,7 @@ print(importance_matrix)
 
 Age emerges as the dominant predictor with the highest gain (48.29%), indicating it contributes most to the model's performance, followed by average glucose level (21.27%) and BMI (15.28%). These top three features account for approximately 85% of the model's predictive power. The secondary tier of predictors includes hypertension and smoking status (both around 3.5% gain), while features like gender and heart disease show minimal impact (around 1% gain). Interestingly, the frequency metric shows a different pattern, with average glucose level being used most often in tree decisions (35.34%), followed by BMI (25.67%) and age (16.69%), suggesting that while age has the highest impact per use, glucose levels and BMI are more frequently utilized in making predictions. 
 
-```{r}
+```{r warning=FALSE}
 # Visualizations
 par(mfrow = c(1, 2))
 # ROC Curve
@@ -631,12 +620,7 @@ On the right, the feature importance plot illustrates a clear ranking of predict
 
 This hierarchy in feature importance suggests that a streamlined model focusing on age, average glucose level, and BMI might retain most of the predictive power, potentially simplifying the model while maintaining effectiveness.
 
-```{r}
-# Required libraries
-library(xgboost)
-library(caret)
-library(pROC)
-library(dplyr)
+```{r warning=FALSE}
 
 # Split data
 set.seed(23)
@@ -739,13 +723,13 @@ cat("\nTest AUC:", round(test_auc, 4), "\n")
 
 We can se that this XGBoost implementation demonstrates a more sophisticated approach through systematic hyperparameter tuning using random search cross-validation, resulting in an improved AUC of 0.8398 compared to the first version's 0.8285. This optimization process explored 200 different parameter combinations, ultimately finding optimal settings including 23 rounds of boosting, a tree depth of 3, a learning rate of 0.084, and various other fine-tuned parameters that control model complexity and sampling. The modest 1.1% improvement in performance suggests that while the optimization was successful, we might be approaching the inherent predictive limit of this dataset given the available features. The tuned model's parameters indicate a preference for a relatively conservative approach, balancing model complexity with generalization ability through moderate sampling rates (colsample_bytree = 0.77, subsample = 0.688) and controlled tree growth (max_depth = 3), which helps prevent overfitting while maintaining predictive performance.
 
-```{r}
+```{r warning=FALSE}
 # Feature importance
 importance_matrix <- xgb.importance(feature_names = features, model = final_model)
 print(importance_matrix)
 ```
 
-```{r}
+```{r warning=FALSE}
 # Plot ROC curve and feature importance
 par(mfrow = c(1, 2))
 plot(test_roc, main = "ROC Curve - Hyperparameter Tuning")
